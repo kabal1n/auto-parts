@@ -1,0 +1,15 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #f5f5f5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Ensure Ant Design tables are readable at 14px */
+.ant-table { font-size: 14px; }
+.ant-form-item-label > label { font-size: 14px; }

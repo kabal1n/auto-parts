@@ -1,0 +1,177 @@
+import { useEffect, useState } from 'react';
+import {
+  Table, Button, Space, Input, Select, Modal, Form,
+  InputNumber, Typography, Popconfirm, Tag, message,
+} from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { productsApi } from '../../api';
+import { useAuthStore } from '../../store/auth';
+
+interface Product {
+  product_id: number;
+  name: string;
+  article: string | null;
+  barcode: string | null;
+  category: string | null;
+  manufacturer: string | null;
+  unit: string;
+  price: number;
+  description: string | null;
+}
+
+export default function ProductsPage() {
+  const { isAdmin } = useAuthStore();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState<string | undefined>();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [form] = Form.useForm();
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const params: Record<string, string> = {};
+      if (search) params.search = search;
+      if (category) params.category = category;
+      const [p, c] = await Promise.all([productsApi.list(params), productsApi.categories()]);
+      setProducts(p.data);
+      setCategories(c.data);
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, [search, category]);
+
+  const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
+  const openEdit = (p: Product) => { setEditing(p); form.setFieldsValue(p); setModalOpen(true); };
+
+  const onSave = async () => {
+    const values = await form.validateFields();
+    try {
+      if (editing) {
+        await productsApi.update(editing.product_id, values);
+        message.success('Товар обновлён');
+      } else {
+        await productsApi.create(values);
+        message.success('Товар добавлен');
+      }
+      setModalOpen(false);
+      load();
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      message.error(msg || 'Ошибка сохранения');
+    }
+  };
+
+  const onDelete = async (id: number) => {
+    try {
+      await productsApi.remove(id);
+      message.success('Товар удалён');
+      load();
+    } catch {
+      message.error('Не удалось удалить товар');
+    }
+  };
+
+  const admin = isAdmin();
+
+  const columns: ColumnsType<Product> = [
+    { title: 'Название', dataIndex: 'name', key: 'name', ellipsis: true },
+    { title: 'Артикул', dataIndex: 'article', key: 'article', width: 120 },
+    { title: 'Штрих-код', dataIndex: 'barcode', key: 'barcode', width: 140 },
+    {
+      title: 'Категория', dataIndex: 'category', key: 'category', width: 140,
+      render: (v: string) => v ? <Tag>{v}</Tag> : null,
+    },
+    { title: 'Производитель', dataIndex: 'manufacturer', key: 'manufacturer', width: 160, ellipsis: true },
+    { title: 'Ед.', dataIndex: 'unit', key: 'unit', width: 60 },
+    {
+      title: 'Цена', dataIndex: 'price', key: 'price', width: 100,
+      render: (v: number) => `${Number(v).toFixed(2)} ₽`,
+    },
+    ...(admin ? [{
+      title: '', key: 'actions', width: 100,
+      render: (_: unknown, record: Product) => (
+        <Space>
+          <Button icon={<EditOutlined />} size="small" onClick={() => openEdit(record)} />
+          <Popconfirm title="Удалить товар?" onConfirm={() => onDelete(record.product_id)}>
+            <Button icon={<DeleteOutlined />} size="small" danger />
+          </Popconfirm>
+        </Space>
+      ),
+    }] as ColumnsType<Product> : []),
+  ];
+
+  return (
+    <>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Typography.Title level={4} style={{ margin: 0, flexGrow: 1 }}>Товары</Typography.Title>
+        <Input
+          placeholder="Поиск по названию, артикулу, штрих-коду"
+          prefix={<SearchOutlined />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          allowClear
+          style={{ width: 320 }}
+        />
+        <Select
+          placeholder="Категория"
+          allowClear
+          value={category}
+          onChange={setCategory}
+          style={{ width: 180 }}
+          options={categories.map((c) => ({ label: c, value: c }))}
+        />
+        {admin && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            Добавить товар
+          </Button>
+        )}
+      </div>
+
+      <Table
+        dataSource={products}
+        columns={columns}
+        rowKey="product_id"
+        loading={loading}
+        size="middle"
+        pagination={{ pageSize: 50, showSizeChanger: false }}
+        scroll={{ x: 900 }}
+      />
+
+      <Modal
+        open={modalOpen}
+        title={editing ? 'Редактировать товар' : 'Добавить товар'}
+        onOk={onSave}
+        onCancel={() => setModalOpen(false)}
+        okText="Сохранить"
+        cancelText="Отмена"
+        width={560}
+      >
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item name="name" label="Название" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="article" label="Артикул"><Input /></Form.Item>
+          <Form.Item name="barcode" label="Штрих-код (EAN-13)"><Input /></Form.Item>
+          <Form.Item name="category" label="Категория"><Input /></Form.Item>
+          <Form.Item name="manufacturer" label="Производитель"><Input /></Form.Item>
+          <Space style={{ width: '100%' }} styles={{ item: { flex: 1 } }}>
+            <Form.Item name="unit" label="Единица измерения" initialValue="шт">
+              <Input />
+            </Form.Item>
+            <Form.Item name="price" label="Цена (₽)" rules={[{ required: true }]}>
+              <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />
+            </Form.Item>
+          </Space>
+          <Form.Item name="description" label="Описание">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  );
+}

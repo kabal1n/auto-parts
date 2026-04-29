@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum ReorderStatus {
+  ACTIVE
+  PROCESSED
+}
+
+model Role {
+  role_id Int    @id @default(autoincrement())
+  name    String @unique @db.VarChar(50)
+
+  users User[]
+}
+
+model User {
+  user_id        Int        @id @default(autoincrement())
+  login          String     @unique @db.VarChar(100)
+  password_hash  String     @db.VarChar(255)
+  account_status UserStatus @default(ACTIVE)
+  role_id        Int
+  last_name      String     @db.VarChar(100)
+  first_name     String     @db.VarChar(100)
+  middle_name    String?    @db.VarChar(100)
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+
+  role          Role            @relation(fields: [role_id], references: [role_id])
+  action_logs   ActionLog[]
+  sales         Sale[]
+  orders        CustomerOrder[]
+  receipts      GoodsReceipt[]
+  reorder_items ReorderEntry[]
+}
+
+model ActionLog {
+  log_id         Int      @id @default(autoincrement())
+  event_datetime DateTime @default(now())
+  user_id        Int
+  action_type    String   @db.VarChar(50)
+  entity_name    String   @db.VarChar(100)
+  entity_id      Int?
+  description    String?  @db.Text
+
+  user User @relation(fields: [user_id], references: [user_id])
+}
+
+model Store {
+  store_id Int    @id @default(autoincrement())
+  name     String @db.VarChar(200)
+
+  stock    StockByStore[]
+  sales    Sale[]
+  orders   CustomerOrder[]
+  receipts GoodsReceipt[]
+  reorders ReorderEntry[]
+}
+
+model Product {
+  product_id   Int      @id @default(autoincrement())
+  name         String   @db.VarChar(300)
+  article      String?  @db.VarChar(100)
+  barcode      String?  @unique @db.VarChar(50)
+  category     String?  @db.VarChar(150)
+  manufacturer String?  @db.VarChar(150)
+  unit         String   @default("шт") @db.VarChar(20)
+  price        Decimal  @db.Decimal(10, 2)
+  description  String?  @db.Text
+  image_path   String?  @db.VarChar(500)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  stock           StockByStore[]
+  sale_items      SaleItem[]
+  order_items     CustomerOrderItem[]
+  receipt_items   GoodsReceiptItem[]
+  reorder_entries ReorderEntry[]
+}
+
+model StockByStore {
+  stock_id         Int @id @default(autoincrement())
+  store_id         Int
+  product_id       Int
+  quantity         Int @default(0)
+  minimum_quantity Int @default(0)
+
+  store   Store   @relation(fields: [store_id], references: [store_id])
+  product Product @relation(fields: [product_id], references: [product_id])
+
+  @@unique([store_id, product_id])
+}
+
+model CustomerStatus {
+  client_status_id         Int     @id @default(autoincrement())
+  name                     String  @db.VarChar(100)
+  default_discount_percent Decimal @default(0) @db.Decimal(5, 2)
+
+  customers Customer[]
+}
+
+model Customer {
+  client_id                Int      @id @default(autoincrement())
+  client_status_id         Int
+  personal_discount_percent Decimal @default(0) @db.Decimal(5, 2)
+  last_name                String   @db.VarChar(100)
+  first_name               String   @db.VarChar(100)
+  middle_name              String?  @db.VarChar(100)
+  phone                    String   @unique @db.VarChar(30)
+  comment                  String?  @db.Text
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+
+  status  CustomerStatus  @relation(fields: [client_status_id], references: [client_status_id])
+  cars    Car[]
+  sales   Sale[]
+  orders  CustomerOrder[]
+}
+
+model Car {
+  car_id    Int     @id @default(autoincrement())
+  client_id Int
+  car_brand String  @db.VarChar(100)
+  car_model String  @db.VarChar(100)
+  car_year  Int?
+  vin       String? @db.VarChar(20)
+
+  customer Customer       @relation(fields: [client_id], references: [client_id])
+  orders   CustomerOrder[]
+}
+
+model Sale {
+  sale_id          Int      @id @default(autoincrement())
+  sale_datetime    DateTime @default(now())
+  subtotal_amount  Decimal  @db.Decimal(10, 2)
+  discount_percent Decimal  @default(0) @db.Decimal(5, 2)
+  discount_amount  Decimal  @default(0) @db.Decimal(10, 2)
+  total_amount     Decimal  @db.Decimal(10, 2)
+  cash_amount      Decimal  @default(0) @db.Decimal(10, 2)
+  card_amount      Decimal  @default(0) @db.Decimal(10, 2)
+  change_amount    Decimal  @default(0) @db.Decimal(10, 2)
+  user_id          Int
+  store_id         Int
+  client_id        Int?
+
+  user     User      @relation(fields: [user_id], references: [user_id])
+  store    Store     @relation(fields: [store_id], references: [store_id])
+  customer Customer? @relation(fields: [client_id], references: [client_id])
+  items    SaleItem[]
+}
+
+model SaleItem {
+  sale_item_id Int     @id @default(autoincrement())
+  sale_id      Int
+  product_id   Int
+  quantity     Int
+  price        Decimal @db.Decimal(10, 2)
+  line_amount  Decimal @db.Decimal(10, 2)
+
+  sale    Sale    @relation(fields: [sale_id], references: [sale_id])
+  product Product @relation(fields: [product_id], references: [product_id])
+}
+
+model CustomerOrderStatus {
+  order_status_id Int    @id @default(autoincrement())
+  name            String @db.VarChar(100)
+
+  orders CustomerOrder[]
+}
+
+model CustomerOrder {
+  customer_order_id Int      @id @default(autoincrement())
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  total_amount      Decimal  @db.Decimal(10, 2)
+  prepayment_amount Decimal  @default(0) @db.Decimal(10, 2)
+  amount_due        Decimal  @db.Decimal(10, 2)
+  client_id         Int
+  user_id           Int
+  store_id          Int
+  order_status_id   Int
+  car_id            Int?
+
+  customer Customer            @relation(fields: [client_id], references: [client_id])
+  user     User                @relation(fields: [user_id], references: [user_id])
+  store    Store               @relation(fields: [store_id], references: [store_id])
+  status   CustomerOrderStatus @relation(fields: [order_status_id], references: [order_status_id])
+  car      Car?                @relation(fields: [car_id], references: [car_id])
+  items    CustomerOrderItem[]
+}
+
+model CustomerOrderItem {
+  customer_order_item_id Int     @id @default(autoincrement())
+  customer_order_id      Int
+  product_id             Int
+  quantity               Int
+  price                  Decimal @db.Decimal(10, 2)
+  line_amount            Decimal @db.Decimal(10, 2)
+
+  order   CustomerOrder @relation(fields: [customer_order_id], references: [customer_order_id])
+  product Product       @relation(fields: [product_id], references: [product_id])
+}
+
+model GoodsReceipt {
+  receipt_id       Int      @id @default(autoincrement())
+  receipt_datetime DateTime @default(now())
+  note             String?  @db.Text
+  user_id          Int
+  store_id         Int
+
+  user  User               @relation(fields: [user_id], references: [user_id])
+  store Store              @relation(fields: [store_id], references: [store_id])
+  items GoodsReceiptItem[]
+}
+
+model GoodsReceiptItem {
+  receipt_item_id Int     @id @default(autoincrement())
+  receipt_id      Int
+  product_id      Int
+  quantity        Int
+  purchase_price  Decimal @db.Decimal(10, 2)
+  sale_price      Decimal @db.Decimal(10, 2)
+
+  receipt GoodsReceipt @relation(fields: [receipt_id], references: [receipt_id])
+  product Product      @relation(fields: [product_id], references: [product_id])
+}
+
+model ReorderEntry {
+  reorder_entry_id  Int           @id @default(autoincrement())
+  created_at        DateTime      @default(now())
+  required_quantity Int
+  comment           String?       @db.Text
+  status            ReorderStatus @default(ACTIVE)
+  store_id          Int
+  product_id        Int
+  user_id           Int
+
+  store   Store   @relation(fields: [store_id], references: [store_id])
+  product Product @relation(fields: [product_id], references: [product_id])
+  user    User    @relation(fields: [user_id], references: [user_id])
+}
