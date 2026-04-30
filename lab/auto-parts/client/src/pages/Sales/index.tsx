@@ -6,6 +6,7 @@ import {
 import { DeleteOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { productsApi, customersApi, salesApi } from '../../api';
+import { maskPhone, normalizePhone } from '../../utils/phone';
 import { useActiveStore } from '../../store/activeStore';
 import StoreGuard from '../../components/StoreGuard';
 
@@ -78,7 +79,7 @@ export default function SalesPage() {
   const searchCustomer = async () => {
     if (!customerSearch) return;
     try {
-      const res = await customersApi.byPhone(customerSearch);
+      const res = await customersApi.byPhone(normalizePhone(customerSearch));
       setCustomer(res.data);
     } catch {
       message.warning('Клиент не найден');
@@ -175,8 +176,8 @@ export default function SalesPage() {
           <div style={{ background: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
             <Typography.Text strong>Клиент (необязательно)</Typography.Text>
             <Space.Compact style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
-              <Input prefix={<UserOutlined />} placeholder="+7 (999) 000-00-00"
-                value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} onPressEnter={searchCustomer} />
+              <Input prefix={<UserOutlined />} placeholder="+7 (999) 999-99-99" maxLength={18}
+                value={customerSearch} onChange={(e) => setCustomerSearch(maskPhone(e.target.value))} onPressEnter={searchCustomer} />
               <Button onClick={searchCustomer}>Найти</Button>
             </Space.Compact>
 

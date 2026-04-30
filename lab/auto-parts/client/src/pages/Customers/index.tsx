@@ -6,6 +6,7 @@ import {
 } from 'antd';
 import { PlusOutlined, EditOutlined, CarOutlined, SearchOutlined } from '@ant-design/icons';
 import { customersApi } from '../../api';
+import { formatPhone, maskPhone, normalizePhone } from '../../utils/phone';
 
 interface Customer {
   client_id: number;
@@ -61,12 +62,13 @@ export default function CustomersPage() {
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
   const openEdit = (c: Customer) => {
     setEditing(c);
-    form.setFieldsValue({ ...c, client_status_id: c.client_status_id });
+    form.setFieldsValue({ ...c, phone: maskPhone(c.phone), client_status_id: c.client_status_id });
     setModalOpen(true);
   };
 
   const onSave = async () => {
     const values = await form.validateFields();
+    values.phone = normalizePhone(values.phone);
     try {
       if (editing) {
         await customersApi.update(editing.client_id, values);
@@ -118,7 +120,7 @@ export default function CustomersPage() {
     { title: 'Фамилия', dataIndex: 'last_name', key: 'last_name' },
     { title: 'Имя', dataIndex: 'first_name', key: 'first_name' },
     { title: 'Отчество', dataIndex: 'middle_name', key: 'middle_name' },
-    { title: 'Телефон', dataIndex: 'phone', key: 'phone', width: 150 },
+    { title: 'Телефон', dataIndex: 'phone', key: 'phone', width: 170, render: (v: string) => formatPhone(v) },
     {
       title: 'Статус', key: 'status', width: 140,
       render: (_: unknown, c: Customer) => <Tag color="blue">{c.status?.name}</Tag>,
@@ -172,8 +174,9 @@ export default function CustomersPage() {
             <Form.Item name="first_name" label="Имя" rules={[{ required: true }]}><Input /></Form.Item>
           </Space>
           <Form.Item name="middle_name" label="Отчество"><Input /></Form.Item>
-          <Form.Item name="phone" label="Телефон" rules={[{ required: true, message: 'Телефон обязателен' }]}>
-            <Input placeholder="+7 (999) 000-00-00" />
+          <Form.Item name="phone" label="Телефон" rules={[{ required: true, message: 'Телефон обязателен' }]}
+            getValueFromEvent={(e: React.ChangeEvent<HTMLInputElement>) => maskPhone(e.target.value)}>
+            <Input placeholder="+7 (999) 999-99-99" maxLength={18} />
           </Form.Item>
           <Form.Item name="client_status_id" label="Статус клиента" initialValue={1}>
             <Select options={STATUSES} />

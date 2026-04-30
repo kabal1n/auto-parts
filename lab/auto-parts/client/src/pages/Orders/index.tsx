@@ -6,6 +6,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import { ordersApi, customersApi, productsApi } from '../../api';
+import { formatPhone } from '../../utils/phone';
 import { useActiveStore } from '../../store/activeStore';
 import StoreGuard from '../../components/StoreGuard';
 import dayjs from 'dayjs';
@@ -68,7 +69,7 @@ export default function OrdersPage() {
     const res = await customersApi.list({ search: val });
     setCustomerOptions(res.data.map((c: { client_id: number; last_name: string; first_name: string; phone: string }) => ({
       value: String(c.client_id),
-      label: `${c.last_name} ${c.first_name} — ${c.phone}`,
+      label: `${c.last_name} ${c.first_name} — ${formatPhone(c.phone)}`,
       client_id: c.client_id,
     })));
   };
@@ -115,7 +116,7 @@ export default function OrdersPage() {
   const columns: ColumnsType<Order> = [
     { title: '№', dataIndex: 'customer_order_id', key: 'id', width: 70 },
     { title: 'Дата', dataIndex: 'created_at', key: 'date', width: 160, render: (v: string) => dayjs(v).format('DD.MM.YYYY HH:mm') },
-    { title: 'Клиент', key: 'client', render: (_: unknown, o: Order) => `${o.customer.last_name} ${o.customer.first_name} ${o.customer.phone}` },
+    { title: 'Клиент', key: 'client', render: (_: unknown, o: Order) => `${o.customer.last_name} ${o.customer.first_name} ${formatPhone(o.customer.phone)}` },
     { title: 'Сумма', dataIndex: 'total_amount', key: 'total', width: 110, render: (v: number) => `${Number(v).toFixed(2)} ₽` },
     { title: 'К оплате', dataIndex: 'amount_due', key: 'due', width: 110, render: (v: number) => `${Number(v).toFixed(2)} ₽` },
     {
@@ -186,7 +187,7 @@ export default function OrdersPage() {
           <>
             <Descriptions bordered size="small" column={1} style={{ marginBottom: 16 }}>
               <Descriptions.Item label="Клиент">{detailOrder.customer.last_name} {detailOrder.customer.first_name}</Descriptions.Item>
-              <Descriptions.Item label="Телефон">{detailOrder.customer.phone}</Descriptions.Item>
+              <Descriptions.Item label="Телефон">{formatPhone(detailOrder.customer.phone)}</Descriptions.Item>
               <Descriptions.Item label="Автомобиль">{detailOrder.car ? `${detailOrder.car.car_brand} ${detailOrder.car.car_model}` : '—'}</Descriptions.Item>
               <Descriptions.Item label="Создан">{dayjs(detailOrder.created_at).format('DD.MM.YYYY HH:mm')}</Descriptions.Item>
               <Descriptions.Item label="Статус"><Tag color={STATUS_COLORS[detailOrder.status.name]}>{detailOrder.status.name}</Tag></Descriptions.Item>
