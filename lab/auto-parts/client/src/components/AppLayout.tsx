@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Button, Typography, Tag, Select, Tooltip } from 'antd';
 import {
+  HomeOutlined,
   ShoppingCartOutlined,
   AppstoreOutlined,
   DatabaseOutlined,
@@ -22,6 +23,7 @@ import { storesApi } from '../api';
 const { Sider, Header, Content } = Layout;
 
 const allItems = [
+  { key: '/',          label: 'Главная',            icon: <HomeOutlined />,        adminOnly: false },
   { key: '/sales',     label: 'Касса / Продажа',   icon: <ShoppingCartOutlined />, adminOnly: false },
   { key: '/products',  label: 'Товары',             icon: <AppstoreOutlined />,    adminOnly: false },
   { key: '/stock',     label: 'Остатки',            icon: <DatabaseOutlined />,    adminOnly: false },

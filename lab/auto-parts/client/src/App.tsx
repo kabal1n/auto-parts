@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/auth';
 import AppLayout from './components/AppLayout';
 import LoginPage from './pages/Login';
+import DashboardPage from './pages/Dashboard';
 import ProductsPage from './pages/Products';
 import StockPage from './pages/Stock';
 import CustomersPage from './pages/Customers';
@@ -33,7 +34,8 @@ export default function App() {
             </PrivateRoute>
           }
         >
-          <Route index element={<Navigate to="/sales" replace />} />
+          <Route index element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="sales" element={<SalesPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="stock" element={<StockPage />} />
