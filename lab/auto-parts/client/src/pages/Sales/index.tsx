@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Row, Col, Input, Button, Table, InputNumber, Typography,
-  Space, Flex, Divider, Modal, Form, Radio, Statistic, message, Tag, AutoComplete,
+  Space, Flex, Divider, Modal, Radio, Statistic, message, Tag, AutoComplete,
 } from 'antd';
 import { DeleteOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -23,8 +23,10 @@ export default function SalesPage() {
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerOptions, setCustomerOptions] = useState<{ value: string; label: string; customer: Customer }[]>([]);
   const [paymentOpen, setPaymentOpen] = useState(false);
-  const [payForm] = Form.useForm();
   const [payType, setPayType] = useState<'cash' | 'card' | 'mixed'>('cash');
+  const [cashGiven, setCashGiven] = useState(0);
+  const [mixedCash, setMixedCash] = useState(0);
+  const [mixedCard, setMixedCard] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   const barcodeBuffer = useRef('');
@@ -105,17 +107,32 @@ export default function SalesPage() {
   const discountAmt = subtotal * (discount / 100);
   const total = subtotal - discountAmt;
 
+  const resetPayState = (t: number) => {
+    setCashGiven(t);
+    setMixedCash(t);
+    setMixedCard(0);
+  };
+
   const openPayment = () => {
     if (!cart.length) { message.warning('Добавьте товары в корзину'); return; }
-    payForm.setFieldsValue({ cash_amount: total.toFixed(2), card_amount: 0 });
+    resetPayState(Math.round(total * 100) / 100);
+    setPayType('cash');
     setPaymentOpen(true);
   };
 
   const submitSale = async () => {
-    const values = await payForm.validateFields();
-    const cash = payType === 'card' ? 0 : Number(values.cash_amount || 0);
-    const card = payType === 'cash' ? 0 : Number(values.card_amount || 0);
-    if (cash + card < total - 0.01) { message.error('Сумма оплаты меньше итога'); return; }
+    let cash = 0, card = 0, change = 0;
+    if (payType === 'cash') {
+      if (cashGiven < total - 0.01) { message.error('Сумма наличных меньше суммы к оплате'); return; }
+      cash = total;
+      change = Math.max(0, cashGiven - total);
+    } else if (payType === 'card') {
+      card = total;
+    } else {
+      if (mixedCash + mixedCard < total - 0.01) { message.error('Сумма оплаты меньше итога'); return; }
+      cash = mixedCash;
+      card = mixedCard;
+    }
 
     setSubmitting(true);
     try {
@@ -125,6 +142,7 @@ export default function SalesPage() {
         discount_percent: discount,
         cash_amount: cash,
         card_amount: card,
+        change_amount: change,
         items: cart.map((i) => ({ product_id: i.product_id, quantity: i.quantity, price: Number(i.price) })),
       });
       message.success('Продажа оформлена');
@@ -132,7 +150,6 @@ export default function SalesPage() {
       setCustomer(null);
       setCustomerSearch('');
       setPaymentOpen(false);
-      payForm.resetFields();
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
       message.error(msg || 'Ошибка оформления продажи');
@@ -242,25 +259,53 @@ export default function SalesPage() {
         <Modal open={paymentOpen} title="Оплата" onOk={submitSale} onCancel={() => setPaymentOpen(false)}
           okText="Провести продажу" cancelText="Отмена" confirmLoading={submitting} width={420}>
           <Statistic title="К оплате" value={total.toFixed(2)} suffix="₽" style={{ marginBottom: 16 }} />
-          <Form form={payForm} layout="vertical">
-            <Form.Item label="Способ оплаты">
-              <Radio.Group value={payType} onChange={(e) => setPayType(e.target.value)}>
-                <Radio.Button value="cash">Наличные</Radio.Button>
-                <Radio.Button value="card">Карта</Radio.Button>
-                <Radio.Button value="mixed">Смешанная</Radio.Button>
-              </Radio.Group>
-            </Form.Item>
-            {payType !== 'card' && (
-              <Form.Item name="cash_amount" label="Наличные (₽)">
-                <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />
-              </Form.Item>
-            )}
-            {payType !== 'cash' && (
-              <Form.Item name="card_amount" label="Карта (₽)">
-                <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />
-              </Form.Item>
-            )}
-          </Form>
+
+          <div style={{ marginBottom: 16 }}>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Способ оплаты</Typography.Text>
+            <Radio.Group value={payType} onChange={(e) => { setPayType(e.target.value); resetPayState(Math.round(total * 100) / 100); }}>
+              <Radio.Button value="cash">Наличные</Radio.Button>
+              <Radio.Button value="card">Карта</Radio.Button>
+              <Radio.Button value="mixed">Смешанная</Radio.Button>
+            </Radio.Group>
+          </div>
+
+          {payType === 'cash' && (
+            <>
+              <div style={{ marginBottom: 12 }}>
+                <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>Принято от покупателя (₽)</Typography.Text>
+                <InputNumber
+                  value={cashGiven} min={0} step={1} precision={2} style={{ width: '100%' }}
+                  onChange={(v) => setCashGiven(v ?? 0)}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <Typography.Text type="secondary">Сдача</Typography.Text>
+                <div style={{ fontSize: 24, fontWeight: 600, color: cashGiven >= total - 0.01 ? '#52c41a' : '#ff4d4f' }}>
+                  {Math.max(0, cashGiven - total).toFixed(2)} ₽
+                </div>
+              </div>
+            </>
+          )}
+
+          {payType === 'mixed' && (
+            <>
+              <div style={{ marginBottom: 12 }}>
+                <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>Наличные (₽)</Typography.Text>
+                <InputNumber
+                  value={mixedCash} min={0} step={0.01} precision={2} style={{ width: '100%' }}
+                  onChange={(v) => { const c = Math.max(0, v ?? 0); setMixedCash(c); setMixedCard(Math.max(0, Math.round((total - c) * 100) / 100)); }}
+                />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>Карта (₽)</Typography.Text>
+                <InputNumber
+                  value={mixedCard} min={0} step={0.01} precision={2} style={{ width: '100%' }}
+                  onChange={(v) => { const c = Math.max(0, v ?? 0); setMixedCard(c); setMixedCash(Math.max(0, Math.round((total - c) * 100) / 100)); }}
+                />
+              </div>
+            </>
+          )}
         </Modal>
       </Row>
     </StoreGuard>
