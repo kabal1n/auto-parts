@@ -19,7 +19,7 @@ router.get('/', async (req: Request, res: Response) => {
   res.json(entries);
 });
 
-router.post('/', requireRole(ADMIN), async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const { store_id, product_id, required_quantity, comment } = req.body;
   if (!store_id || !product_id || !required_quantity) {
     res.status(400).json({ error: 'Укажите магазин, товар и количество' });

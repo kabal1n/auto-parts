@@ -106,11 +106,9 @@ export default function ReorderPage() {
         <Select value={filterStatus} onChange={setFilterStatus} allowClear placeholder="Все статусы"
           style={{ width: 160 }}
           options={[{ value: 'ACTIVE', label: 'Активные' }, { value: 'PROCESSED', label: 'Исполненные' }]} />
-        {admin && (
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-            Создать заявку
-          </Button>
-        )}
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+          Создать заявку
+        </Button>
       </div>
 
       <Table dataSource={entries} columns={columns} rowKey="reorder_entry_id" loading={loading} size="middle" />
