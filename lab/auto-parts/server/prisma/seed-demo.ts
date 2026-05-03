@@ -315,29 +315,31 @@ async function main() {
   }
 
   // ── 10. Заявки на закупку ────────────────────────────────────────────────
-  const reorderCount = await prisma.reorderEntry.count();
+  const reorderCount = await prisma.reorderRequest.count();
   if (reorderCount === 0) {
-    await prisma.reorderEntry.createMany({ data: [
-      {
-        product_id: products[0].product_id, store_id: 1, user_id: adminUser.user_id,
-        required_quantity: 20, status: ReorderStatus.ACTIVE,
-        comment: 'Срочно! Остаток 3 шт при минимуме 5',
-        created_at: new Date('2026-04-29T15:00:00'),
-      },
-      {
-        product_id: products[7].product_id, store_id: 1, user_id: adminUser.user_id,
-        required_quantity: 10, status: ReorderStatus.ACTIVE,
-        comment: 'Остаток 1 шт при минимуме 5',
-        created_at: new Date('2026-04-29T15:05:00'),
-      },
-      {
-        product_id: products[4].product_id, store_id: 1, user_id: adminUser.user_id,
-        required_quantity: 15, status: ReorderStatus.PROCESSED,
-        comment: 'Закуплено, ожидаем поставку',
-        created_at: new Date('2026-04-27T10:00:00'),
-      },
-    ]});
-    console.log('✓ Заявки на закупку (3)');
+    // Заявка 1 (ACTIVE): масляный фильтр + антифриз + свечи
+    await prisma.reorderRequest.create({ data: {
+      store_id: 1, user_id: adminUser.user_id,
+      status: ReorderStatus.ACTIVE,
+      comment: 'Срочно! Три позиции ниже минимума',
+      created_at: new Date('2026-04-29T15:00:00'),
+      items: { create: [
+        { product_id: products[0].product_id, required_quantity: 20 }, // масляный фильтр
+        { product_id: products[7].product_id, required_quantity: 10 }, // антифриз
+        { product_id: products[4].product_id, required_quantity: 15 }, // свечи
+      ]},
+    }});
+    // Заявка 2 (PROCESSED): ремень ГРМ
+    await prisma.reorderRequest.create({ data: {
+      store_id: 1, user_id: adminUser.user_id,
+      status: ReorderStatus.PROCESSED,
+      comment: 'Закуплено, ожидаем поставку',
+      created_at: new Date('2026-04-27T10:00:00'),
+      items: { create: [
+        { product_id: products[5].product_id, required_quantity: 8 }, // ремень ГРМ
+      ]},
+    }});
+    console.log('✓ Заявки на закупку (2 заявки, 4 позиции)');
   } else {
     console.log(`· Заявки пропущены (уже есть ${reorderCount})`);
   }

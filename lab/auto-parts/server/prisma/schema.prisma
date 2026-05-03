@@ -41,7 +41,7 @@ model User {
   sales         Sale[]
   orders        CustomerOrder[]
   receipts      GoodsReceipt[]
-  reorder_items ReorderEntry[]
+  reorder_requests ReorderRequest[]
 }
 
 model ActionLog {
@@ -64,7 +64,7 @@ model Store {
   sales    Sale[]
   orders   CustomerOrder[]
   receipts GoodsReceipt[]
-  reorders ReorderEntry[]
+  reorder_requests ReorderRequest[]
 }
 
 model Product {
@@ -85,7 +85,7 @@ model Product {
   sale_items      SaleItem[]
   order_items     CustomerOrderItem[]
   receipt_items   GoodsReceiptItem[]
-  reorder_entries ReorderEntry[]
+  reorder_items ReorderItem[]
 }
 
 model StockByStore {
@@ -235,17 +235,25 @@ model GoodsReceiptItem {
   product Product      @relation(fields: [product_id], references: [product_id])
 }
 
-model ReorderEntry {
-  reorder_entry_id  Int           @id @default(autoincrement())
-  created_at        DateTime      @default(now())
-  required_quantity Int
-  comment           String?       @db.Text
-  status            ReorderStatus @default(ACTIVE)
-  store_id          Int
-  product_id        Int
-  user_id           Int
+model ReorderRequest {
+  reorder_request_id Int           @id @default(autoincrement())
+  created_at         DateTime      @default(now())
+  comment            String?       @db.Text
+  status             ReorderStatus @default(ACTIVE)
+  store_id           Int
+  user_id            Int
 
-  store   Store   @relation(fields: [store_id], references: [store_id])
-  product Product @relation(fields: [product_id], references: [product_id])
-  user    User    @relation(fields: [user_id], references: [user_id])
+  store Store         @relation(fields: [store_id], references: [store_id])
+  user  User          @relation(fields: [user_id], references: [user_id])
+  items ReorderItem[]
+}
+
+model ReorderItem {
+  item_id            Int @id @default(autoincrement())
+  reorder_request_id Int
+  product_id         Int
+  required_quantity  Int
+
+  request ReorderRequest @relation(fields: [reorder_request_id], references: [reorder_request_id], onDelete: Cascade)
+  product Product        @relation(fields: [product_id], references: [product_id])
 }
