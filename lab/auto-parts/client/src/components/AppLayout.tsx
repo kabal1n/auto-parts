@@ -23,7 +23,7 @@ import { storesApi } from '../api';
 const { Sider, Header, Content } = Layout;
 
 const allItems = [
-  { key: '/',          label: 'Главная',            icon: <HomeOutlined />,        adminOnly: false },
+  { key: '/',          label: 'Главная',            icon: <HomeOutlined />,        adminOnly: true  },
   { key: '/sales',     label: 'Касса / Продажа',   icon: <ShoppingCartOutlined />, adminOnly: false },
   { key: '/products',  label: 'Товары',             icon: <AppstoreOutlined />,    adminOnly: false },
   { key: '/stock',     label: 'Остатки',            icon: <DatabaseOutlined />,    adminOnly: false },

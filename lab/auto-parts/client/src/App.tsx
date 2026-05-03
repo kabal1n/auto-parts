@@ -17,8 +17,13 @@ import AuditLogPage from './pages/AuditLog';
 function PrivateRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { token, isAdmin } = useAuthStore();
   if (!token) return <Navigate to="/login" replace />;
-  if (adminOnly && !isAdmin()) return <Navigate to="/" replace />;
+  if (adminOnly && !isAdmin()) return <Navigate to="/sales" replace />;
   return <>{children}</>;
+}
+
+function IndexRoute() {
+  const { isAdmin } = useAuthStore();
+  return isAdmin() ? <DashboardPage /> : <Navigate to="/sales" replace />;
 }
 
 export default function App() {
@@ -34,7 +39,7 @@ export default function App() {
             </PrivateRoute>
           }
         >
-          <Route index element={<DashboardPage />} />
+          <Route index element={<IndexRoute />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="sales" element={<SalesPage />} />
           <Route path="products" element={<ProductsPage />} />
