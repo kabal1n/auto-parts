@@ -6,7 +6,7 @@ import {
 import { DeleteOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { productsApi, customersApi, salesApi } from '../../api';
-import { maskPhone, normalizePhone } from '../../utils/phone';
+import { maskPhone, formatPhone } from '../../utils/phone';
 import { useActiveStore } from '../../store/activeStore';
 import StoreGuard from '../../components/StoreGuard';
 
@@ -21,6 +21,7 @@ export default function SalesPage() {
   const [productOptions, setProductOptions] = useState<{ value: string; label: string; product: Product }[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerSearch, setCustomerSearch] = useState('');
+  const [customerOptions, setCustomerOptions] = useState<{ value: string; label: string; customer: Customer }[]>([]);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [payForm] = Form.useForm();
   const [payType, setPayType] = useState<'cash' | 'card' | 'mixed'>('cash');
@@ -76,15 +77,27 @@ export default function SalesPage() {
     setCart((c) => c.map((i) => i.product_id === id ? { ...i, quantity: qty } : i));
   };
 
-  const searchCustomer = async () => {
-    if (!customerSearch) return;
+  const onPhoneChange = async (val: string) => {
+    const masked = maskPhone(val);
+    setCustomerSearch(masked);
+    const digits = val.replace(/\D/g, '').replace(/^[78]/, '');
+    if (digits.length < 3) { setCustomerOptions([]); return; }
     try {
-      const res = await customersApi.byPhone(normalizePhone(customerSearch));
-      setCustomer(res.data);
-    } catch {
-      message.warning('Клиент не найден');
-      setCustomer(null);
-    }
+      const res = await customersApi.list({ search: digits });
+      setCustomerOptions(
+        res.data.map((c: Customer) => ({
+          value: String(c.client_id),
+          label: `${c.last_name} ${c.first_name} — ${formatPhone(c.phone)}`,
+          customer: c,
+        })),
+      );
+    } catch { setCustomerOptions([]); }
+  };
+
+  const onSelectCustomer = (_val: string, opt: { value: string; label: string; customer: Customer }) => {
+    setCustomer(opt.customer);
+    setCustomerSearch('');
+    setCustomerOptions([]);
   };
 
   const discount = customer ? Number(customer.personal_discount_percent) : 0;
@@ -175,11 +188,18 @@ export default function SalesPage() {
         <Col span={9}>
           <div style={{ background: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
             <Typography.Text strong>Клиент (необязательно)</Typography.Text>
-            <Space.Compact style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
-              <Input prefix={<UserOutlined />} placeholder="+7 (999) 999-99-99" maxLength={18}
-                value={customerSearch} onChange={(e) => setCustomerSearch(maskPhone(e.target.value))} onPressEnter={searchCustomer} />
-              <Button onClick={searchCustomer}>Найти</Button>
-            </Space.Compact>
+            <AutoComplete
+              value={customerSearch}
+              options={customerOptions}
+              onChange={onPhoneChange}
+              onSelect={onSelectCustomer}
+              style={{ width: '100%', marginTop: 8 }}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Начните вводить номер телефона..." maxLength={18} />
+            </AutoComplete>
+            <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 12 }}>
+              Вводите цифры — «+7» добавится автоматически
+            </Typography.Text>
 
             {customer && (
               <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6, padding: '8px 12px', marginBottom: 12 }}>
