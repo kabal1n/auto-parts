@@ -97,7 +97,10 @@ export default function ReorderPage() {
     setCreateOpen(true);
   };
 
+  const hasUnconfirmed = formItems.some((i) => i.product_name && !i.product_id);
+
   const create = async () => {
+    if (hasUnconfirmed) { message.warning('Выберите товар из списка для каждой позиции'); return; }
     const valid = formItems.filter((i) => i.product_id && i.required_quantity > 0);
     if (!valid.length) { message.warning('Добавьте хотя бы один товар'); return; }
     try {
@@ -199,6 +202,7 @@ export default function ReorderPage() {
         onCancel={() => setCreateOpen(false)}
         okText="Создать"
         cancelText="Отмена"
+        okButtonProps={{ disabled: hasUnconfirmed }}
         width={620}
       >
         <div style={{ marginTop: 16 }}>
@@ -218,7 +222,7 @@ export default function ReorderPage() {
 
           <div style={{ marginTop: 8 }}>
             {formItems.map((item) => (
-              <div key={item.key} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+              <div key={item.key} style={{ display: 'flex', gap: 8, marginBottom: item.product_name && !item.product_id ? 0 : 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <AutoComplete
                   value={item.product_name}
                   options={productOptions[item.key] ?? []}
@@ -232,7 +236,11 @@ export default function ReorderPage() {
                   })}
                   style={{ flex: 1 }}
                 >
-                  <Input prefix={<SearchOutlined />} placeholder="Поиск товара по названию или артикулу" />
+                  <Input
+                    prefix={<SearchOutlined />}
+                    placeholder="Поиск товара по названию или артикулу"
+                    status={item.product_name && !item.product_id ? 'error' : ''}
+                  />
                 </AutoComplete>
                 <InputNumber
                   min={1} value={item.required_quantity}
@@ -244,6 +252,11 @@ export default function ReorderPage() {
                     icon={<MinusCircleOutlined />} danger type="text"
                     onClick={() => removeItem(item.key)}
                   />
+                )}
+                {item.product_name && !item.product_id && (
+                  <Typography.Text type="danger" style={{ fontSize: 12, width: '100%', marginTop: -4, marginBottom: 4 }}>
+                    Выберите товар из выпадающего списка
+                  </Typography.Text>
                 )}
               </div>
             ))}
