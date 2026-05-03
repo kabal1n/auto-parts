@@ -109,7 +109,7 @@ export default function SalesPage() {
 
   const resetPayState = (t: number) => {
     setCashGiven(t);
-    setMixedCash(t);
+    setMixedCash(0);
     setMixedCard(0);
   };
 
