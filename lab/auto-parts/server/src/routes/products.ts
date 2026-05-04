@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { logAction } from '../lib/audit';
 import { requireRole } from '../middleware/requireRole';
@@ -76,8 +75,9 @@ router.delete('/:id', requireRole(ADMIN), async (req: Request, res: Response) =>
     await prisma.product.delete({ where: { product_id: id } });
     await logAction(req.user!.user_id, 'DELETE', 'products', id, `Удалён товар #${id}`);
     res.json({ ok: true });
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+  } catch (e: unknown) {
+    const code = (e as { code?: string })?.code;
+    if (code) {
       res.status(409).json({ error: 'Нельзя удалить товар: он используется в продажах, заказах или заявках на закупку' });
     } else {
       res.status(500).json({ error: 'Ошибка удаления товара' });
