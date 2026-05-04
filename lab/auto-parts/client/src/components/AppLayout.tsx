@@ -40,7 +40,7 @@ interface Store { store_id: number; name: string }
 
 export default function AppLayout() {
   const { user, logout, isAdmin } = useAuthStore();
-  const { activeStoreId, setActiveStore } = useActiveStore();
+  const { activeStoreId, activeStoreName, setActiveStore, clearActiveStore } = useActiveStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [stores, setStores] = useState<Store[]>([]);
@@ -84,24 +84,31 @@ export default function AppLayout() {
           gap: 16,
           height: 56,
         }}>
-          {/* Store selector */}
-          <Tooltip title="Активный магазин">
-            <Select
-              prefix={<ShopOutlined />}
-              placeholder={<><ShopOutlined /> Выберите магазин</>}
-              value={activeStoreId ?? undefined}
-              onChange={(id) => {
-                const store = stores.find((s) => s.store_id === id);
-                if (store) setActiveStore(store.store_id, store.name);
-              }}
-              style={{ minWidth: 200 }}
-              options={stores.map((s) => ({ value: s.store_id, label: s.name }))}
-            />
-          </Tooltip>
-
-          {!activeStoreId && (
-            <Typography.Text type="danger" style={{ fontSize: 13 }}>
-              Выберите магазин для работы
+          {/* Store selector — admin only; cashier sees a locked label */}
+          {isAdmin() ? (
+            <>
+              <Tooltip title="Активный магазин">
+                <Select
+                  prefix={<ShopOutlined />}
+                  placeholder={<><ShopOutlined /> Выберите магазин</>}
+                  value={activeStoreId ?? undefined}
+                  onChange={(id) => {
+                    const store = stores.find((s) => s.store_id === id);
+                    if (store) setActiveStore(store.store_id, store.name);
+                  }}
+                  style={{ minWidth: 200 }}
+                  options={stores.map((s) => ({ value: s.store_id, label: s.name }))}
+                />
+              </Tooltip>
+              {!activeStoreId && (
+                <Typography.Text type="danger" style={{ fontSize: 13 }}>
+                  Выберите магазин для работы
+                </Typography.Text>
+              )}
+            </>
+          ) : (
+            <Typography.Text style={{ fontSize: 14 }}>
+              <ShopOutlined style={{ marginRight: 6 }} />{activeStoreName}
             </Typography.Text>
           )}
 
@@ -111,7 +118,7 @@ export default function AppLayout() {
             <Button
               icon={<LogoutOutlined />}
               type="text"
-              onClick={() => { logout(); navigate('/login'); }}
+              onClick={() => { clearActiveStore(); logout(); navigate('/login'); }}
             >
               Выйти
             </Button>
