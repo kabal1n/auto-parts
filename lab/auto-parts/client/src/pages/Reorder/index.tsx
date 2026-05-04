@@ -52,6 +52,7 @@ export default function ReorderPage() {
   const [productOptions, setProductOptions] = useState<Record<number, ProductOption[]>>({});
   const [filterStatus, setFilterStatus] = useState<string | undefined>('ACTIVE');
   const [nextKey, setNextKey] = useState(1);
+  const [expandedKeys, setExpandedKeys] = useState<number[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -180,7 +181,21 @@ export default function ReorderPage() {
         rowKey="reorder_request_id"
         loading={loading}
         size="middle"
+        onRow={(r: ReorderRequest) => ({
+          onClick: () => setExpandedKeys((prev) =>
+            prev.includes(r.reorder_request_id)
+              ? prev.filter((k) => k !== r.reorder_request_id)
+              : [...prev, r.reorder_request_id]
+          ),
+          style: { cursor: 'pointer' },
+        })}
         expandable={{
+          expandedRowKeys: expandedKeys,
+          onExpand: (expanded, r: ReorderRequest) =>
+            setExpandedKeys((prev) =>
+              expanded ? [...prev, r.reorder_request_id] : prev.filter((k) => k !== r.reorder_request_id)
+            ),
+          showExpandColumn: false,
           expandedRowRender: (r: ReorderRequest) => (
             <Table
               dataSource={r.items}
