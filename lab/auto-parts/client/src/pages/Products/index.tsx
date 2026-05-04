@@ -70,6 +70,7 @@ export default function ProductsPage() {
     try {
       await productsApi.remove(id);
       message.success('Товар удалён');
+      setModalOpen(false);
       load();
     } catch {
       message.error('Не удалось удалить товар');
@@ -93,14 +94,9 @@ export default function ProductsPage() {
       render: (v: number) => `${Number(v).toFixed(2)} ₽`,
     },
     ...(admin ? [{
-      title: '', key: 'actions', width: 100,
+      title: '', key: 'actions', width: 60,
       render: (_: unknown, record: Product) => (
-        <Space>
-          <Button icon={<EditOutlined />} size="small" onClick={() => openEdit(record)} />
-          <Popconfirm title="Удалить товар?" onConfirm={() => onDelete(record.product_id)}>
-            <Button icon={<DeleteOutlined />} size="small" danger />
-          </Popconfirm>
-        </Space>
+        <Button icon={<EditOutlined />} size="small" onClick={() => openEdit(record)} />
       ),
     }] as ColumnsType<Product> : []),
   ];
@@ -145,11 +141,24 @@ export default function ProductsPage() {
       <Modal
         open={modalOpen}
         title={editing ? 'Редактировать товар' : 'Добавить товар'}
-        onOk={onSave}
         onCancel={() => setModalOpen(false)}
-        okText="Сохранить"
-        cancelText="Отмена"
         width={560}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              {editing && (
+                <Popconfirm title="Удалить товар?" okText="Удалить" okButtonProps={{ danger: true }} cancelText="Отмена"
+                  onConfirm={() => onDelete(editing.product_id)}>
+                  <Button danger icon={<DeleteOutlined />}>Удалить</Button>
+                </Popconfirm>
+              )}
+            </div>
+            <Space>
+              <Button onClick={() => setModalOpen(false)}>Отмена</Button>
+              <Button type="primary" onClick={onSave}>Сохранить</Button>
+            </Space>
+          </div>
+        }
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item name="name" label="Название" rules={[{ required: true }]}>
