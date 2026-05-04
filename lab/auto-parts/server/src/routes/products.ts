@@ -48,7 +48,7 @@ router.get('/:id', async (req: Request, res: Response) => {
   res.json(product);
 });
 
-router.post('/', requireRole(ADMIN), async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const { name, article, barcode, category, manufacturer, unit, price, description } = req.body;
   if (!name || price === undefined) { res.status(400).json({ error: 'Укажите название и цену' }); return; }
   const product = await prisma.product.create({
@@ -58,7 +58,7 @@ router.post('/', requireRole(ADMIN), async (req: Request, res: Response) => {
   res.status(201).json(product);
 });
 
-router.put('/:id', requireRole(ADMIN), async (req: Request, res: Response) => {
+router.put('/:id', async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   const { name, article, barcode, category, manufacturer, unit, price, description } = req.body;
   const product = await prisma.product.update({

@@ -94,12 +94,12 @@ export default function ProductsPage() {
       title: 'Цена', dataIndex: 'price', key: 'price', width: 100,
       render: (v: number) => `${Number(v).toFixed(2)} ₽`,
     },
-    ...(admin ? [{
+    {
       title: '', key: 'actions', width: 60,
       render: (_: unknown, record: Product) => (
         <Button icon={<EditOutlined />} size="small" onClick={() => openEdit(record)} />
       ),
-    }] as ColumnsType<Product> : []),
+    },
   ];
 
   return (
@@ -122,11 +122,9 @@ export default function ProductsPage() {
           style={{ width: 180 }}
           options={categories.map((c) => ({ label: c, value: c }))}
         />
-        {admin && (
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            Добавить товар
-          </Button>
-        )}
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          Добавить товар
+        </Button>
       </div>
 
       <Table
@@ -147,7 +145,7 @@ export default function ProductsPage() {
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div>
-              {editing && (
+              {editing && admin && (
                 <Popconfirm title="Удалить товар?" okText="Удалить" okButtonProps={{ danger: true }} cancelText="Отмена"
                   onConfirm={() => onDelete(editing.product_id)}>
                   <Button danger icon={<DeleteOutlined />}>Удалить</Button>
