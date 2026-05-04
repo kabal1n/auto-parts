@@ -7,6 +7,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import { receiptsApi, productsApi } from '../../api';
 import { useActiveStore } from '../../store/activeStore';
+import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import StoreGuard from '../../components/StoreGuard';
 import dayjs from 'dayjs';
 
@@ -28,6 +29,13 @@ export default function ReceiptsPage() {
   const [cartItems, setCartItems] = useState<Array<{ product_id: number; name: string; quantity: number; purchase_price: number; sale_price: number }>>([]);
   const [productOptions, setProductOptions] = useState<{ value: string; label: string; product: { product_id: number; name: string; price: number } }[]>([]);
   const [detail, setDetail] = useState<Receipt | null>(null);
+
+  useBarcodeScanner((barcode) => {
+    if (!createOpen) return;
+    productsApi.byBarcode(barcode)
+      .then((res) => addItem(res.data))
+      .catch(() => message.warning(`Товар со штрих-кодом ${barcode} не найден`));
+  });
 
   const load = async () => {
     setLoading(true);

@@ -6,6 +6,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { productsApi } from '../../api';
+import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import { useAuthStore } from '../../store/auth';
 
 interface Product {
@@ -30,6 +31,8 @@ export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form] = Form.useForm();
+
+  useBarcodeScanner((barcode) => setSearch(barcode));
 
   const load = async () => {
     setLoading(true);

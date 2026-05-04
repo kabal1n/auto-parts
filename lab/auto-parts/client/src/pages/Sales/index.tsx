@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   Row, Col, Input, Button, Table, InputNumber, Typography,
   Space, Flex, Divider, Modal, Radio, Statistic, message, Tag, AutoComplete,
@@ -8,6 +8,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { productsApi, customersApi, salesApi } from '../../api';
 import { maskPhone, formatPhone } from '../../utils/phone';
 import { useActiveStore } from '../../store/activeStore';
+import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import StoreGuard from '../../components/StoreGuard';
 
 interface Product { product_id: number; name: string; price: number; unit: string; barcode: string | null; article: string | null }
@@ -29,28 +30,11 @@ export default function SalesPage() {
   const [mixedCard, setMixedCard] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  const barcodeBuffer = useRef('');
-  const barcodeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && barcodeBuffer.current.length > 3) {
-        const barcode = barcodeBuffer.current;
-        barcodeBuffer.current = '';
-        productsApi.byBarcode(barcode)
-          .then((res) => addToCart(res.data))
-          .catch(() => message.warning(`Товар со штрих-кодом ${barcode} не найден`));
-        return;
-      }
-      if (e.key.length === 1) {
-        barcodeBuffer.current += e.key;
-        clearTimeout(barcodeTimer.current);
-        barcodeTimer.current = setTimeout(() => { barcodeBuffer.current = ''; }, 80);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [cart]);
+  useBarcodeScanner((barcode) => {
+    productsApi.byBarcode(barcode)
+      .then((res) => addToCart(res.data))
+      .catch(() => message.warning(`Товар со штрих-кодом ${barcode} не найден`));
+  });
 
   const searchProducts = async (val: string) => {
     if (!val) { setProductOptions([]); return; }

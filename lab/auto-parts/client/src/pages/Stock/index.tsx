@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Table, Typography, Tag, InputNumber, Button, message } from 'antd';
+import { Table, Typography, Tag, InputNumber, Button, Input, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { SaveOutlined } from '@ant-design/icons';
-import { stockApi } from '../../api';
+import { SaveOutlined, SearchOutlined } from '@ant-design/icons';
+import { stockApi, productsApi } from '../../api';
 import { useAuthStore } from '../../store/auth';
 import { useActiveStore } from '../../store/activeStore';
+import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import StoreGuard from '../../components/StoreGuard';
 
 interface StockRow {
@@ -50,7 +51,22 @@ export default function StockPage() {
     }
   };
 
+  const [search, setSearch] = useState('');
+
+  useBarcodeScanner((barcode) => {
+    productsApi.byBarcode(barcode)
+      .then((res) => setSearch(res.data.name))
+      .catch(() => message.warning(`Товар со штрих-кодом ${barcode} не найден`));
+  });
+
   const admin = isAdmin();
+
+  const filtered = search
+    ? rows.filter((r) =>
+        r.product.name.toLowerCase().includes(search.toLowerCase()) ||
+        (r.product.article ?? '').toLowerCase().includes(search.toLowerCase())
+      )
+    : rows;
 
   const columns: ColumnsType<StockRow> = [
     { title: 'Магазин', dataIndex: ['store', 'name'], key: 'store', width: 160 },
@@ -101,15 +117,23 @@ export default function StockPage() {
 
   return (
     <StoreGuard>
-      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center' }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>Остатки на складе</Typography.Title>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <Typography.Title level={4} style={{ margin: 0, flexGrow: 1 }}>Остатки на складе</Typography.Title>
+        <Input
+          prefix={<SearchOutlined />}
+          placeholder="Поиск по названию или артикулу"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          allowClear
+          style={{ width: 300 }}
+        />
         {admin && (
-          <Typography.Text type="secondary" style={{ marginLeft: 'auto', fontSize: 13 }}>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             Редактируйте ячейки и сохраняйте кнопкой
           </Typography.Text>
         )}
       </div>
-      <Table dataSource={rows} columns={columns} rowKey="stock_id" loading={loading}
+      <Table dataSource={filtered} columns={columns} rowKey="stock_id" loading={loading}
         size="middle" pagination={{ pageSize: 50 }} />
     </StoreGuard>
   );
