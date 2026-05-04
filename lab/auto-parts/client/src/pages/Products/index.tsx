@@ -72,8 +72,9 @@ export default function ProductsPage() {
       message.success('Товар удалён');
       setModalOpen(false);
       load();
-    } catch {
-      message.error('Не удалось удалить товар');
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      message.error(msg || 'Не удалось удалить товар');
     }
   };
 

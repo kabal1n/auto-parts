@@ -77,8 +77,8 @@ router.delete('/:id', requireRole(ADMIN), async (req: Request, res: Response) =>
     await logAction(req.user!.user_id, 'DELETE', 'products', id, `Удалён товар #${id}`);
     res.json({ ok: true });
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
-      res.status(409).json({ error: 'Нельзя удалить товар: он используется в продажах, заказах или заявках' });
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      res.status(409).json({ error: 'Нельзя удалить товар: он используется в продажах, заказах или заявках на закупку' });
     } else {
       res.status(500).json({ error: 'Ошибка удаления товара' });
     }
