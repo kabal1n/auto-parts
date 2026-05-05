@@ -7,17 +7,24 @@ interface Props {
   value?: number | null;
   onChange?: (id: number | null) => void;
   onAdd: (name: string) => Promise<LookupOption>;
+  onTyping?: (hasUnconfirmed: boolean) => void;
   placeholder?: string;
 }
 
-export default function CreatableSelect({ options, value, onChange, onAdd, placeholder }: Props) {
-  const selectedName = options.find((o) => o.id === value)?.name ?? '';
-  const [inputText, setInputText] = useState(selectedName);
+export default function CreatableSelect({ options, value, onChange, onAdd, onTyping, placeholder }: Props) {
+  const [inputText, setInputText] = useState(options.find((o) => o.id === value)?.name ?? '');
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     setInputText(options.find((o) => o.id === value)?.name ?? '');
   }, [value, options]);
+
+  // Unconfirmed = user typed something but hasn't selected an option
+  const isUnconfirmed = inputText.trim().length > 0 && (value == null);
+
+  useEffect(() => {
+    onTyping?.(isUnconfirmed);
+  }, [isUnconfirmed]);
 
   const filtered = inputText
     ? options.filter((o) => o.name.toLowerCase().includes(inputText.toLowerCase()))
@@ -62,7 +69,6 @@ export default function CreatableSelect({ options, value, onChange, onAdd, place
     }
     const exact = options.find((o) => o.name.toLowerCase() === inputText.trim().toLowerCase());
     if (exact) {
-      // auto-select exact case-insensitive match
       setInputText(exact.name);
       onChange?.(exact.id);
     } else {
@@ -75,6 +81,7 @@ export default function CreatableSelect({ options, value, onChange, onAdd, place
     <AutoComplete
       value={inputText}
       options={autoOptions}
+      status={isUnconfirmed ? 'error' : undefined}
       onChange={(text) => {
         setInputText(text);
         if (!text) onChange?.(null);

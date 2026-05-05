@@ -38,6 +38,8 @@ export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form] = Form.useForm();
+  const [unconfirmed, setUnconfirmed] = useState({ cat: false, mfr: false, unit: false });
+  const hasUnconfirmed = unconfirmed.cat || unconfirmed.mfr || unconfirmed.unit;
 
   useBarcodeScanner((barcode) => setSearch(barcode));
 
@@ -69,10 +71,12 @@ export default function ProductsPage() {
   const openCreate = () => {
     setEditing(null);
     form.resetFields();
+    setUnconfirmed({ cat: false, mfr: false, unit: false });
     setModalOpen(true);
   };
 
   const openEdit = (p: Product) => {
+    setUnconfirmed({ cat: false, mfr: false, unit: false });
     setEditing(p);
     form.setFieldsValue({
       name: p.name,
@@ -193,7 +197,7 @@ export default function ProductsPage() {
             </div>
             <Space>
               <Button onClick={() => setModalOpen(false)}>Отмена</Button>
-              <Button type="primary" onClick={onSave}>Сохранить</Button>
+              <Button type="primary" onClick={onSave} disabled={hasUnconfirmed}>Сохранить</Button>
             </Space>
           </div>
         }
@@ -213,6 +217,7 @@ export default function ProductsPage() {
                 setCategories((prev) => [...prev, opt].sort((a, b) => a.name.localeCompare(b.name)));
                 return opt;
               }}
+              onTyping={(v) => setUnconfirmed((u) => ({ ...u, cat: v }))}
               placeholder="Выберите или создайте категорию"
             />
           </Form.Item>
@@ -225,6 +230,7 @@ export default function ProductsPage() {
                 setManufacturers((prev) => [...prev, opt].sort((a, b) => a.name.localeCompare(b.name)));
                 return opt;
               }}
+              onTyping={(v) => setUnconfirmed((u) => ({ ...u, mfr: v }))}
               placeholder="Выберите или создайте производителя"
             />
           </Form.Item>
@@ -238,6 +244,7 @@ export default function ProductsPage() {
                   setUnits((prev) => [...prev, opt].sort((a, b) => a.name.localeCompare(b.name)));
                   return opt;
                 }}
+                onTyping={(v) => setUnconfirmed((u) => ({ ...u, unit: v }))}
                 placeholder="шт"
               />
             </Form.Item>
