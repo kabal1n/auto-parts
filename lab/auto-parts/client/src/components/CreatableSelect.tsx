@@ -55,6 +55,22 @@ export default function CreatableSelect({ options, value, onChange, onAdd, place
     }
   };
 
+  const handleBlur = () => {
+    if (!inputText.trim()) {
+      onChange?.(null);
+      return;
+    }
+    const exact = options.find((o) => o.name.toLowerCase() === inputText.trim().toLowerCase());
+    if (exact) {
+      // auto-select exact case-insensitive match
+      setInputText(exact.name);
+      onChange?.(exact.id);
+    } else {
+      // typed text was not confirmed — reset to last valid selected value
+      setInputText(options.find((o) => o.id === value)?.name ?? '');
+    }
+  };
+
   return (
     <AutoComplete
       value={inputText}
@@ -64,6 +80,7 @@ export default function CreatableSelect({ options, value, onChange, onAdd, place
         if (!text) onChange?.(null);
       }}
       onSelect={handleSelect}
+      onBlur={handleBlur}
       disabled={adding}
     >
       <Input autoComplete="off" placeholder={placeholder} />
