@@ -42,6 +42,25 @@ router.get('/categories', async (_req: Request, res: Response) => {
   res.json(cats.map((c) => c.category).filter(Boolean));
 });
 
+router.get('/manufacturers', async (_req: Request, res: Response) => {
+  const rows = await prisma.product.findMany({
+    select: { manufacturer: true },
+    distinct: ['manufacturer'],
+    where: { manufacturer: { not: null } },
+    orderBy: { manufacturer: 'asc' },
+  });
+  res.json(rows.map((r) => r.manufacturer).filter(Boolean));
+});
+
+router.get('/units', async (_req: Request, res: Response) => {
+  const rows = await prisma.product.findMany({
+    select: { unit: true },
+    distinct: ['unit'],
+    orderBy: { unit: 'asc' },
+  });
+  res.json(rows.map((r) => r.unit));
+});
+
 router.get('/:id', async (req: Request, res: Response) => {
   const product = await prisma.product.findUnique({ where: { product_id: Number(req.params.id) } });
   if (!product) { res.status(404).json({ error: 'Товар не найден' }); return; }

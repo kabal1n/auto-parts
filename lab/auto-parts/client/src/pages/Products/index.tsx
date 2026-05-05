@@ -8,6 +8,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant
 import { productsApi } from '../../api';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import { useAuthStore } from '../../store/auth';
+import CreatableSelect from '../../components/CreatableSelect';
 
 interface Product {
   product_id: number;
@@ -25,6 +26,8 @@ export default function ProductsPage() {
   const { isAdmin } = useAuthStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [manufacturers, setManufacturers] = useState<string[]>([]);
+  const [units, setUnits] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<string | undefined>();
@@ -34,18 +37,29 @@ export default function ProductsPage() {
 
   useBarcodeScanner((barcode) => setSearch(barcode));
 
+  const loadLookups = async () => {
+    const [c, m, u] = await Promise.all([
+      productsApi.categories(),
+      productsApi.manufacturers(),
+      productsApi.units(),
+    ]);
+    setCategories(c.data);
+    setManufacturers(m.data);
+    setUnits(u.data);
+  };
+
   const load = async () => {
     setLoading(true);
     try {
       const params: Record<string, string> = {};
       if (search) params.search = search;
       if (category) params.category = category;
-      const [p, c] = await Promise.all([productsApi.list(params), productsApi.categories()]);
+      const p = await productsApi.list(params);
       setProducts(p.data);
-      setCategories(c.data);
     } finally { setLoading(false); }
   };
 
+  useEffect(() => { loadLookups(); }, []);
   useEffect(() => { load(); }, [search, category]);
 
   const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
@@ -63,6 +77,7 @@ export default function ProductsPage() {
       }
       setModalOpen(false);
       load();
+      loadLookups();
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
       message.error(msg || 'Ошибка сохранения');
@@ -168,11 +183,15 @@ export default function ProductsPage() {
           </Form.Item>
           <Form.Item name="article" label="Артикул"><Input /></Form.Item>
           <Form.Item name="barcode" label="Штрих-код (EAN-13)"><Input /></Form.Item>
-          <Form.Item name="category" label="Категория"><Input /></Form.Item>
-          <Form.Item name="manufacturer" label="Производитель"><Input /></Form.Item>
+          <Form.Item name="category" label="Категория">
+            <CreatableSelect options={categories} placeholder="Выберите или создайте категорию" />
+          </Form.Item>
+          <Form.Item name="manufacturer" label="Производитель">
+            <CreatableSelect options={manufacturers} placeholder="Выберите или создайте производителя" />
+          </Form.Item>
           <Space style={{ width: '100%' }} styles={{ item: { flex: 1 } }}>
             <Form.Item name="unit" label="Единица измерения" initialValue="шт">
-              <Input />
+              <CreatableSelect options={units} placeholder="шт" />
             </Form.Item>
             <Form.Item name="price" label="Цена (₽)" rules={[{ required: true }]}>
               <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />
