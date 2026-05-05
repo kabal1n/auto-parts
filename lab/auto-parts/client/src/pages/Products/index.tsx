@@ -5,7 +5,8 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
-import { productsApi } from '../../api';
+import { productsApi, lookupsApi } from '../../api';
+import type { LookupOption } from '../../api';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import { useAuthStore } from '../../store/auth';
 import CreatableSelect from '../../components/CreatableSelect';
@@ -15,9 +16,12 @@ interface Product {
   name: string;
   article: string | null;
   barcode: string | null;
+  category_id: number | null;
   category: string | null;
+  manufacturer_id: number | null;
   manufacturer: string | null;
-  unit: string;
+  unit_id: number | null;
+  unit: string | null;
   price: number;
   description: string | null;
 }
@@ -25,12 +29,12 @@ interface Product {
 export default function ProductsPage() {
   const { isAdmin } = useAuthStore();
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [manufacturers, setManufacturers] = useState<string[]>([]);
-  const [units, setUnits] = useState<string[]>([]);
+  const [categories, setCategories] = useState<LookupOption[]>([]);
+  const [manufacturers, setManufacturers] = useState<LookupOption[]>([]);
+  const [units, setUnits] = useState<LookupOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<string | undefined>();
+  const [categoryId, setCategoryId] = useState<number | undefined>();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form] = Form.useForm();
@@ -39,9 +43,9 @@ export default function ProductsPage() {
 
   const loadLookups = async () => {
     const [c, m, u] = await Promise.all([
-      productsApi.categories(),
-      productsApi.manufacturers(),
-      productsApi.units(),
+      lookupsApi.categories(),
+      lookupsApi.manufacturers(),
+      lookupsApi.units(),
     ]);
     setCategories(c.data);
     setManufacturers(m.data);
@@ -53,17 +57,35 @@ export default function ProductsPage() {
     try {
       const params: Record<string, string> = {};
       if (search) params.search = search;
-      if (category) params.category = category;
+      if (categoryId) params.category_id = String(categoryId);
       const p = await productsApi.list(params);
       setProducts(p.data);
     } finally { setLoading(false); }
   };
 
   useEffect(() => { loadLookups(); }, []);
-  useEffect(() => { load(); }, [search, category]);
+  useEffect(() => { load(); }, [search, categoryId]);
 
-  const openCreate = () => { setEditing(null); form.resetFields(); setModalOpen(true); };
-  const openEdit = (p: Product) => { setEditing(p); form.setFieldsValue(p); setModalOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    form.resetFields();
+    setModalOpen(true);
+  };
+
+  const openEdit = (p: Product) => {
+    setEditing(p);
+    form.setFieldsValue({
+      name: p.name,
+      article: p.article,
+      barcode: p.barcode,
+      category_id: p.category_id,
+      manufacturer_id: p.manufacturer_id,
+      unit_id: p.unit_id,
+      price: p.price,
+      description: p.description,
+    });
+    setModalOpen(true);
+  };
 
   const onSave = async () => {
     const values = await form.validateFields();
@@ -77,7 +99,6 @@ export default function ProductsPage() {
       }
       setModalOpen(false);
       load();
-      loadLookups();
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
       message.error(msg || 'Ошибка сохранения');
@@ -135,10 +156,10 @@ export default function ProductsPage() {
         <Select
           placeholder="Категория"
           allowClear
-          value={category}
-          onChange={setCategory}
+          value={categoryId}
+          onChange={setCategoryId}
           style={{ width: 180 }}
-          options={categories.map((c) => ({ label: c, value: c }))}
+          options={categories.map((c) => ({ label: c.name, value: c.id }))}
         />
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           Добавить товар
@@ -183,15 +204,42 @@ export default function ProductsPage() {
           </Form.Item>
           <Form.Item name="article" label="Артикул"><Input /></Form.Item>
           <Form.Item name="barcode" label="Штрих-код (EAN-13)"><Input /></Form.Item>
-          <Form.Item name="category" label="Категория">
-            <CreatableSelect options={categories} placeholder="Выберите или создайте категорию" />
+          <Form.Item name="category_id" label="Категория">
+            <CreatableSelect
+              options={categories}
+              onAdd={async (name) => {
+                const res = await lookupsApi.addCategory(name);
+                const opt = res.data;
+                setCategories((prev) => [...prev, opt].sort((a, b) => a.name.localeCompare(b.name)));
+                return opt;
+              }}
+              placeholder="Выберите или создайте категорию"
+            />
           </Form.Item>
-          <Form.Item name="manufacturer" label="Производитель">
-            <CreatableSelect options={manufacturers} placeholder="Выберите или создайте производителя" />
+          <Form.Item name="manufacturer_id" label="Производитель">
+            <CreatableSelect
+              options={manufacturers}
+              onAdd={async (name) => {
+                const res = await lookupsApi.addManufacturer(name);
+                const opt = res.data;
+                setManufacturers((prev) => [...prev, opt].sort((a, b) => a.name.localeCompare(b.name)));
+                return opt;
+              }}
+              placeholder="Выберите или создайте производителя"
+            />
           </Form.Item>
           <Space style={{ width: '100%' }} styles={{ item: { flex: 1 } }}>
-            <Form.Item name="unit" label="Единица измерения" initialValue="шт">
-              <CreatableSelect options={units} placeholder="шт" />
+            <Form.Item name="unit_id" label="Единица измерения">
+              <CreatableSelect
+                options={units}
+                onAdd={async (name) => {
+                  const res = await lookupsApi.addUnit(name);
+                  const opt = res.data;
+                  setUnits((prev) => [...prev, opt].sort((a, b) => a.name.localeCompare(b.name)));
+                  return opt;
+                }}
+                placeholder="шт"
+              />
             </Form.Item>
             <Form.Item name="price" label="Цена (₽)" rules={[{ required: true }]}>
               <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />

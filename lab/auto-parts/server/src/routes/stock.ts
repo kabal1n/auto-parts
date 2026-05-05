@@ -6,23 +6,54 @@ import { requireRole } from '../middleware/requireRole';
 const router = Router();
 const ADMIN = 'Администратор';
 
+const PRODUCT_INCLUDE = { category: true, manufacturer: true, unit: true } as const;
+
+function flattenStockProduct(p: {
+  product_id: number; name: string; article: string | null; barcode: string | null;
+  category_id: number | null; manufacturer_id: number | null; unit_id: number | null;
+  price: unknown; description: string | null; image_path: string | null;
+  created_at: Date; updated_at: Date;
+  category: { category_id: number; name: string } | null;
+  manufacturer: { manufacturer_id: number; name: string } | null;
+  unit: { unit_id: number; name: string } | null;
+}) {
+  return {
+    product_id: p.product_id,
+    name: p.name,
+    article: p.article,
+    barcode: p.barcode,
+    category_id: p.category_id,
+    category: p.category?.name ?? null,
+    manufacturer_id: p.manufacturer_id,
+    manufacturer: p.manufacturer?.name ?? null,
+    unit_id: p.unit_id,
+    unit: p.unit?.name ?? null,
+    price: p.price,
+    description: p.description,
+    image_path: p.image_path,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+  };
+}
+
 router.get('/', async (req: Request, res: Response) => {
   const { store_id } = req.query as Record<string, string>;
   const stock = await prisma.stockByStore.findMany({
     where: store_id ? { store_id: Number(store_id) } : {},
-    include: { product: true, store: true },
+    include: { product: { include: PRODUCT_INCLUDE }, store: true },
     orderBy: { product: { name: 'asc' } },
   });
-  res.json(stock);
+  res.json(stock.map((s) => ({ ...s, product: flattenStockProduct(s.product) })));
 });
 
 router.get('/low', async (req: Request, res: Response) => {
   const { store_id } = req.query as Record<string, string>;
   const all = await prisma.stockByStore.findMany({
     where: store_id ? { store_id: Number(store_id) } : {},
-    include: { product: true, store: true },
+    include: { product: { include: PRODUCT_INCLUDE }, store: true },
   });
-  res.json(all.filter((s) => s.quantity <= s.minimum_quantity));
+  const flattened = all.map((s) => ({ ...s, product: flattenStockProduct(s.product) }));
+  res.json(flattened.filter((s) => s.quantity <= s.minimum_quantity));
 });
 
 router.put('/:id', requireRole(ADMIN), async (req: Request, res: Response) => {

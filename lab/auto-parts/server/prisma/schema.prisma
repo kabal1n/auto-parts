@@ -67,25 +67,46 @@ model Store {
   reorder_requests ReorderRequest[]
 }
 
-model Product {
-  product_id   Int      @id @default(autoincrement())
-  name         String   @db.VarChar(300)
-  article      String?  @db.VarChar(100)
-  barcode      String?  @unique @db.VarChar(50)
-  category     String?  @db.VarChar(150)
-  manufacturer String?  @db.VarChar(150)
-  unit         String   @default("шт") @db.VarChar(20)
-  price        Decimal  @db.Decimal(10, 2)
-  description  String?  @db.Text
-  image_path   String?  @db.VarChar(500)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+model Category {
+  category_id Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(150)
+  products    Product[]
+}
 
+model Manufacturer {
+  manufacturer_id Int      @id @default(autoincrement())
+  name            String   @unique @db.VarChar(150)
+  products        Product[]
+}
+
+model Unit {
+  unit_id  Int      @id @default(autoincrement())
+  name     String   @unique @db.VarChar(50)
+  products Product[]
+}
+
+model Product {
+  product_id      Int      @id @default(autoincrement())
+  name            String   @db.VarChar(300)
+  article         String?  @db.VarChar(100)
+  barcode         String?  @unique @db.VarChar(50)
+  category_id     Int?
+  manufacturer_id Int?
+  unit_id         Int?
+  price           Decimal  @db.Decimal(10, 2)
+  description     String?  @db.Text
+  image_path      String?  @db.VarChar(500)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  category     Category?     @relation(fields: [category_id],     references: [category_id])
+  manufacturer Manufacturer? @relation(fields: [manufacturer_id], references: [manufacturer_id])
+  unit         Unit?         @relation(fields: [unit_id],         references: [unit_id])
   stock           StockByStore[]
   sale_items      SaleItem[]
   order_items     CustomerOrderItem[]
   receipt_items   GoodsReceiptItem[]
-  reorder_items ReorderItem[]
+  reorder_items   ReorderItem[]
 }
 
 model StockByStore {

@@ -32,12 +32,26 @@ export const productsApi = {
   list: (params?: Record<string, string>) => api.get('/products', { params }),
   get: (id: number) => api.get(`/products/${id}`),
   byBarcode: (barcode: string) => api.get(`/products/barcode/${barcode}`),
-  categories: () => api.get('/products/categories'),
-  manufacturers: () => api.get('/products/manufacturers'),
-  units: () => api.get('/products/units'),
   create: (data: unknown) => api.post('/products', data),
   update: (id: number, data: unknown) => api.put(`/products/${id}`, data),
   remove: (id: number) => api.delete(`/products/${id}`),
+};
+
+// Lookups (Category, Manufacturer, Unit)
+export interface LookupOption { id: number; name: string; }
+export const lookupsApi = {
+  categories: () => api.get<LookupOption[]>('/lookups/categories'),
+  addCategory: (name: string) => api.post<LookupOption>('/lookups/categories', { name }),
+  updateCategory: (id: number, name: string) => api.put<LookupOption>(`/lookups/categories/${id}`, { name }),
+  deleteCategory: (id: number) => api.delete(`/lookups/categories/${id}`),
+  manufacturers: () => api.get<LookupOption[]>('/lookups/manufacturers'),
+  addManufacturer: (name: string) => api.post<LookupOption>('/lookups/manufacturers', { name }),
+  updateManufacturer: (id: number, name: string) => api.put<LookupOption>(`/lookups/manufacturers/${id}`, { name }),
+  deleteManufacturer: (id: number) => api.delete(`/lookups/manufacturers/${id}`),
+  units: () => api.get<LookupOption[]>('/lookups/units'),
+  addUnit: (name: string) => api.post<LookupOption>('/lookups/units', { name }),
+  updateUnit: (id: number, name: string) => api.put<LookupOption>(`/lookups/units/${id}`, { name }),
+  deleteUnit: (id: number) => api.delete(`/lookups/units/${id}`),
 };
 
 // Stock

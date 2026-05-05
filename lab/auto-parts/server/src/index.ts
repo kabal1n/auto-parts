@@ -15,6 +15,7 @@ import receiptsRouter from './routes/receipts';
 import reorderRouter from './routes/reorder';
 import reportsRouter from './routes/reports';
 import auditLogRouter from './routes/auditLog';
+import lookupsRouter from './routes/lookups';
 import { authMiddleware } from './middleware/auth';
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/receipts', authMiddleware, receiptsRouter);
 app.use('/api/reorder', authMiddleware, reorderRouter);
 app.use('/api/reports', authMiddleware, reportsRouter);
 app.use('/api/audit-log', authMiddleware, auditLogRouter);
+app.use('/api/lookups', authMiddleware, lookupsRouter);
 
 // Serve React client in production
 const clientDist = path.join(__dirname, '../../client/dist');

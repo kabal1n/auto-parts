@@ -40,7 +40,23 @@ async function main() {
   });
   console.log('✓ Пользователи (admin + kassir1)');
 
-  // ── 3. Товары ─────────────────────────────────────────────────────────────
+  // ── 3. Справочники (категории, производители, единицы измерения) ──────────
+  const catNames = ['Фильтры', 'Тормозная система', 'Зажигание', 'Двигатель', 'Масла и жидкости', 'Электрика', 'Подвеска'];
+  const cats = await Promise.all(
+    catNames.map((name) => prisma.category.upsert({ where: { name }, update: {}, create: { name } })),
+  );
+  const catMap = Object.fromEntries(cats.map((c) => [c.name, c.category_id]));
+
+  const mfrNames = ['MANN-FILTER', 'BOSCH', 'BREMBO', 'NGK', 'Gates', 'Castrol', 'Totachi', 'VARTA', 'KYB', 'DAYCO', 'LEMFÖRDER'];
+  const mfrs = await Promise.all(
+    mfrNames.map((name) => prisma.manufacturer.upsert({ where: { name }, update: {}, create: { name } })),
+  );
+  const mfrMap = Object.fromEntries(mfrs.map((m) => [m.name, m.manufacturer_id]));
+
+  const unitSht = await prisma.unit.upsert({ where: { name: 'шт' }, update: {}, create: { name: 'шт' } });
+  console.log(`✓ Справочники (${catNames.length} категорий, ${mfrNames.length} производителей, 1 ед.изм.)`);
+
+  // ── 4. Товары ─────────────────────────────────────────────────────────────
   const productsData = [
     { name: 'Масляный фильтр MANN W 712/75',          article: 'W71275',    barcode: '4011558020050', category: 'Фильтры',           manufacturer: 'MANN-FILTER', price: 450 },
     { name: 'Воздушный фильтр MANN C 25 114/1',        article: 'C25114',    barcode: '4011558020067', category: 'Фильтры',           manufacturer: 'MANN-FILTER', price: 680 },
@@ -61,13 +77,21 @@ async function main() {
     const prod = await prisma.product.upsert({
       where: { barcode: p.barcode },
       update: {},
-      create: p,
+      create: {
+        name: p.name,
+        article: p.article,
+        barcode: p.barcode,
+        category_id: catMap[p.category],
+        manufacturer_id: mfrMap[p.manufacturer],
+        unit_id: unitSht.unit_id,
+        price: p.price,
+      },
     });
     products.push(prod);
   }
   console.log(`✓ Товары (${products.length})`);
 
-  // ── 4. Клиенты ───────────────────────────────────────────────────────────
+  // ── 5. Клиенты ───────────────────────────────────────────────────────────
   const cs1 = await prisma.customerStatus.findFirst({ where: { name: 'Обычный' } });
   const cs2 = await prisma.customerStatus.findFirst({ where: { name: 'Постоянный' } });
   const cs3 = await prisma.customerStatus.findFirst({ where: { name: 'VIP' } });
@@ -88,7 +112,7 @@ async function main() {
   const [cPetrov, cSmirnova, cKozlov, cNovikova, cFedorov] = customers;
   console.log(`✓ Клиенты (${customers.length})`);
 
-  // ── 5. Автомобили ────────────────────────────────────────────────────────
+  // ── 6. Автомобили ────────────────────────────────────────────────────────
   const carDefs = [
     { clientId: cSmirnova.client_id, brand: 'Toyota',        model: 'Camry',    year: 2019, vin: 'XW8ZZZ3BZNG000001' },
     { clientId: cKozlov.client_id,   brand: 'BMW',           model: 'X5',       year: 2021, vin: 'WBAFG410X0LN00001' },
@@ -110,8 +134,7 @@ async function main() {
   const camryId  = carMap[`${cSmirnova.client_id}_Toyota_Camry`];
   const bmwId    = carMap[`${cKozlov.client_id}_BMW_X5`];
 
-  // ── 6. Остатки ───────────────────────────────────────────────────────────
-  // Магазин 1 (некоторые ниже минимума — для теста Dashboard и Reorder)
+  // ── 7. Остатки ───────────────────────────────────────────────────────────
   const stock1: [number, number, number][] = [
     [0, 3,  5],  // масляный фильтр  — ДЕФИЦИТ
     [1, 8,  5],  // воздушный фильтр
@@ -134,7 +157,6 @@ async function main() {
     });
   }
 
-  // Магазин 2
   const stock2: [number, number, number][] = [
     [0, 5, 3], [2, 3, 2], [4, 6, 3],
     [5, 3, 2], [6, 8, 4], [7, 4, 3], [8, 2, 1],
@@ -148,10 +170,9 @@ async function main() {
   }
   console.log('✓ Остатки (Магазин №1: 12 позиций, Магазин №2: 7 позиций)');
 
-  // ── 7. Продажи ───────────────────────────────────────────────────────────
+  // ── 8. Продажи ───────────────────────────────────────────────────────────
   const salesCount = await prisma.sale.count();
   if (salesCount === 0) {
-    // 28 апр — Петров: масляный фильтр + масло, наличные
     const s1 = await prisma.sale.create({ data: {
       sale_datetime: new Date('2026-04-28T10:30:00'), user_id: adminUser.user_id, store_id: 1,
       client_id: cPetrov.client_id,
@@ -163,7 +184,6 @@ async function main() {
       { sale_id: s1.sale_id, product_id: products[6].product_id, quantity: 1, price: 3200, line_amount: 3200 },
     ]});
 
-    // 28 апр — анонимно: колодки + свечи, карта
     const s2 = await prisma.sale.create({ data: {
       sale_datetime: new Date('2026-04-28T14:15:00'), user_id: adminUser.user_id, store_id: 1,
       subtotal_amount: 2990, discount_percent: 0, discount_amount: 0, total_amount: 2990,
@@ -174,7 +194,6 @@ async function main() {
       { sale_id: s2.sale_id, product_id: products[4].product_id, quantity: 1, price: 890,  line_amount: 890  },
     ]});
 
-    // 29 апр — Смирнова (5%): аккумулятор, карта
     const s3sub = 5800, s3disc = Math.round(s3sub * 0.05 * 100) / 100;
     const s3 = await prisma.sale.create({ data: {
       sale_datetime: new Date('2026-04-29T09:45:00'), user_id: adminUser.user_id, store_id: 1,
@@ -186,7 +205,6 @@ async function main() {
       { sale_id: s3.sale_id, product_id: products[8].product_id, quantity: 1, price: 5800, line_amount: 5800 },
     ]});
 
-    // 29 апр — Козлов (10%): ремень + помпа, смешанная
     const s4sub = 1450 + 1900, s4disc = Math.round(s4sub * 0.10 * 100) / 100, s4total = s4sub - s4disc;
     const s4 = await prisma.sale.create({ data: {
       sale_datetime: new Date('2026-04-29T16:20:00'), user_id: adminUser.user_id, store_id: 1,
@@ -199,7 +217,6 @@ async function main() {
       { sale_id: s4.sale_id, product_id: products[10].product_id, quantity: 1, price: 1900, line_amount: 1900 },
     ]});
 
-    // 30 апр — анонимно: амортизатор, наличные (сегодня — виден на Dashboard)
     const s5 = await prisma.sale.create({ data: {
       sale_datetime: new Date('2026-04-30T11:00:00'), user_id: adminUser.user_id, store_id: 1,
       subtotal_amount: 2800, discount_percent: 0, discount_amount: 0, total_amount: 2800,
@@ -214,13 +231,12 @@ async function main() {
     console.log(`· Продажи пропущены (уже есть ${salesCount})`);
   }
 
-  // ── 8. Заказы клиентов ───────────────────────────────────────────────────
+  // ── 9. Заказы клиентов ───────────────────────────────────────────────────
   const ordersCount = await prisma.customerOrder.count();
   if (ordersCount === 0) {
     const os = await prisma.customerOrderStatus.findMany();
     const byName = Object.fromEntries(os.map((s) => [s.name, s.order_status_id]));
 
-    // Смирнова — тормозной диск, В работе
     const o1 = await prisma.customerOrder.create({ data: {
       client_id: cSmirnova.client_id, user_id: adminUser.user_id, store_id: 1,
       order_status_id: byName['В работе'],
@@ -231,7 +247,6 @@ async function main() {
       customer_order_id: o1.customer_order_id, product_id: products[3].product_id, quantity: 1, price: 3500, line_amount: 3500,
     }});
 
-    // Козлов — рычаг подвески, Готов к выдаче
     const o2 = await prisma.customerOrder.create({ data: {
       client_id: cKozlov.client_id, user_id: adminUser.user_id, store_id: 1,
       order_status_id: byName['Готов к выдаче'],
@@ -242,7 +257,6 @@ async function main() {
       customer_order_id: o2.customer_order_id, product_id: products[11].product_id, quantity: 1, price: 3100, line_amount: 3100,
     }});
 
-    // Новикова — аккумулятор, Новый
     const o3 = await prisma.customerOrder.create({ data: {
       client_id: cNovikova.client_id, user_id: adminUser.user_id, store_id: 1,
       order_status_id: byName['Новый'],
@@ -252,7 +266,6 @@ async function main() {
       customer_order_id: o3.customer_order_id, product_id: products[8].product_id, quantity: 1, price: 5800, line_amount: 5800,
     }});
 
-    // Петров — тормозные колодки, Выдан
     const o4 = await prisma.customerOrder.create({ data: {
       client_id: cPetrov.client_id, user_id: adminUser.user_id, store_id: 1,
       order_status_id: byName['Выдан'],
@@ -267,10 +280,9 @@ async function main() {
     console.log(`· Заказы пропущены (уже есть ${ordersCount})`);
   }
 
-  // ── 9. Поступления товаров ───────────────────────────────────────────────
+  // ── 10. Поступления товаров ───────────────────────────────────────────────
   const receiptsCount = await prisma.goodsReceipt.count();
   if (receiptsCount === 0) {
-    // Начальная поставка Магазин №1
     const r1 = await prisma.goodsReceipt.create({ data: {
       receipt_datetime: new Date('2026-04-25T09:00:00'),
       user_id: adminUser.user_id, store_id: 1,
@@ -284,7 +296,6 @@ async function main() {
       sale_price: Number(p.price),
     }))});
 
-    // Дополнительно фильтры — Магазин №1
     const r2 = await prisma.goodsReceipt.create({ data: {
       receipt_datetime: new Date('2026-04-28T08:30:00'),
       user_id: adminUser.user_id, store_id: 1,
@@ -295,7 +306,6 @@ async function main() {
       { receipt_id: r2.receipt_id, product_id: products[1].product_id, quantity: 5,  purchase_price: 408, sale_price: 680 },
     ]});
 
-    // Начальная поставка Магазин №2
     const r3 = await prisma.goodsReceipt.create({ data: {
       receipt_datetime: new Date('2026-04-26T10:00:00'),
       user_id: adminUser.user_id, store_id: 2,
@@ -314,29 +324,27 @@ async function main() {
     console.log(`· Поступления пропущены (уже есть ${receiptsCount})`);
   }
 
-  // ── 10. Заявки на закупку ────────────────────────────────────────────────
+  // ── 11. Заявки на закупку ────────────────────────────────────────────────
   const reorderCount = await prisma.reorderRequest.count();
   if (reorderCount === 0) {
-    // Заявка 1 (ACTIVE): масляный фильтр + антифриз + свечи
     await prisma.reorderRequest.create({ data: {
       store_id: 1, user_id: adminUser.user_id,
       status: ReorderStatus.ACTIVE,
       comment: 'Срочно! Три позиции ниже минимума',
       created_at: new Date('2026-04-29T15:00:00'),
       items: { create: [
-        { product_id: products[0].product_id, required_quantity: 20 }, // масляный фильтр
-        { product_id: products[7].product_id, required_quantity: 10 }, // антифриз
-        { product_id: products[4].product_id, required_quantity: 15 }, // свечи
+        { product_id: products[0].product_id, required_quantity: 20 },
+        { product_id: products[7].product_id, required_quantity: 10 },
+        { product_id: products[4].product_id, required_quantity: 15 },
       ]},
     }});
-    // Заявка 2 (PROCESSED): ремень ГРМ
     await prisma.reorderRequest.create({ data: {
       store_id: 1, user_id: adminUser.user_id,
       status: ReorderStatus.PROCESSED,
       comment: 'Закуплено, ожидаем поставку',
       created_at: new Date('2026-04-27T10:00:00'),
       items: { create: [
-        { product_id: products[5].product_id, required_quantity: 8 }, // ремень ГРМ
+        { product_id: products[5].product_id, required_quantity: 8 },
       ]},
     }});
     console.log('✓ Заявки на закупку (2 заявки, 4 позиции)');
