@@ -38,7 +38,7 @@ export const productsApi = {
 };
 
 // Lookups (Category, Manufacturer, Unit)
-export interface LookupOption { id: number; name: string; }
+export interface LookupOption { id: number; name: string; markup_percent?: number; }
 export const lookupsApi = {
   categories: () => api.get<LookupOption[]>('/lookups/categories'),
   addCategory: (name: string) => api.post<LookupOption>('/lookups/categories', { name }),
@@ -96,6 +96,42 @@ export const receiptsApi = {
   list: (params?: Record<string, string>) => api.get('/receipts', { params }),
   get: (id: number) => api.get(`/receipts/${id}`),
   create: (data: unknown) => api.post('/receipts', data),
+  upload: (formData: FormData) => api.post('/receipts/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  patchItem: (receiptId: number, itemId: number, data: unknown) =>
+    api.patch(`/receipts/${receiptId}/items/${itemId}`, data),
+  createProduct: (receiptId: number, itemId: number, data: unknown) =>
+    api.post(`/receipts/${receiptId}/items/${itemId}/create-product`, data),
+  createIssue: (receiptId: number, itemId: number, data: unknown) =>
+    api.post(`/receipts/${receiptId}/items/${itemId}/issue`, data),
+  patchStatus: (receiptId: number, status: string) =>
+    api.patch(`/receipts/${receiptId}/status`, { status }),
+  issues: () => api.get('/receipts/issues'),
+  resolveIssue: (issueId: number) => api.patch(`/receipts/issues/${issueId}/resolve`),
+};
+
+// Suppliers
+export interface Supplier {
+  supplier_id: number;
+  name: string;
+  xls_config: {
+    startRow: number;
+    article: string;
+    name: string;
+    barcode: string | null;
+    manufacturer: string | null;
+    quantity: string;
+    purchase_price: string;
+    supplierNameCells: string[];
+    aliases: string[];
+  };
+}
+export const suppliersApi = {
+  list: () => api.get<Supplier[]>('/suppliers'),
+  create: (data: unknown) => api.post<Supplier>('/suppliers', data),
+  update: (id: number, data: unknown) => api.put<Supplier>(`/suppliers/${id}`, data),
+  remove: (id: number) => api.delete(`/suppliers/${id}`),
 };
 
 // Reorder

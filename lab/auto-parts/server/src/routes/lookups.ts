@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/categories', async (_req: Request, res: Response) => {
   const rows = await prisma.category.findMany({ orderBy: { name: 'asc' } });
-  res.json(rows.map((r) => ({ id: r.category_id, name: r.name })));
+  res.json(rows.map((r) => ({ id: r.category_id, name: r.name, markup_percent: Number(r.markup_percent) })));
 });
 
 router.post('/categories', async (req: Request, res: Response) => {

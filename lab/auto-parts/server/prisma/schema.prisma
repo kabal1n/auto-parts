@@ -17,6 +17,13 @@ enum ReorderStatus {
   PROCESSED
 }
 
+enum ReceiptStatus {
+  DRAFT
+  READY
+  POSTED
+  CANCELLED
+}
+
 model Role {
   role_id Int    @id @default(autoincrement())
   name    String @unique @db.VarChar(50)
@@ -41,7 +48,8 @@ model User {
   sales         Sale[]
   orders        CustomerOrder[]
   receipts      GoodsReceipt[]
-  reorder_requests ReorderRequest[]
+  reorder_requests        ReorderRequest[]
+  receipt_issues_resolved ReceiptIssue[] @relation("IssueResolver")
 }
 
 model ActionLog {
@@ -67,10 +75,18 @@ model Store {
   reorder_requests ReorderRequest[]
 }
 
+model Supplier {
+  supplier_id Int            @id @default(autoincrement())
+  name        String         @db.VarChar(200)
+  xls_config  Json
+  receipts    GoodsReceipt[]
+}
+
 model Category {
-  category_id Int      @id @default(autoincrement())
-  name        String   @unique @db.VarChar(150)
-  products    Product[]
+  category_id    Int      @id @default(autoincrement())
+  name           String   @unique @db.VarChar(150)
+  markup_percent Decimal  @default(50) @db.Decimal(5, 2)
+  products       Product[]
 }
 
 model Manufacturer {
@@ -233,27 +249,55 @@ model CustomerOrderItem {
 }
 
 model GoodsReceipt {
-  receipt_id       Int      @id @default(autoincrement())
-  receipt_datetime DateTime @default(now())
-  note             String?  @db.Text
+  receipt_id       Int           @id @default(autoincrement())
+  receipt_datetime DateTime      @default(now())
+  note             String?       @db.Text
   user_id          Int
   store_id         Int
+  supplier_id      Int?
+  status           ReceiptStatus @default(DRAFT)
+  file_name        String?       @db.VarChar(500)
 
-  user  User               @relation(fields: [user_id], references: [user_id])
-  store Store              @relation(fields: [store_id], references: [store_id])
-  items GoodsReceiptItem[]
+  user     User               @relation(fields: [user_id],     references: [user_id])
+  store    Store              @relation(fields: [store_id],    references: [store_id])
+  supplier Supplier?          @relation(fields: [supplier_id], references: [supplier_id])
+  items    GoodsReceiptItem[]
+  issues   ReceiptIssue[]
 }
 
 model GoodsReceiptItem {
-  receipt_item_id Int     @id @default(autoincrement())
-  receipt_id      Int
-  product_id      Int
-  quantity        Int
-  purchase_price  Decimal @db.Decimal(10, 2)
-  sale_price      Decimal @db.Decimal(10, 2)
+  receipt_item_id      Int     @id @default(autoincrement())
+  receipt_id           Int
+  product_id           Int?
+  quantity             Int
+  purchase_price       Decimal @db.Decimal(10, 2)
+  sale_price           Decimal @db.Decimal(10, 2)
+  update_product_price Boolean @default(false)
+  match_status         String  @default("pending") @db.VarChar(20)
+  raw_article          String? @db.VarChar(100)
+  raw_name             String? @db.VarChar(300)
+  raw_barcode          String? @db.VarChar(50)
+  raw_manufacturer     String? @db.VarChar(150)
 
-  receipt GoodsReceipt @relation(fields: [receipt_id], references: [receipt_id])
-  product Product      @relation(fields: [product_id], references: [product_id])
+  receipt GoodsReceipt  @relation(fields: [receipt_id], references: [receipt_id])
+  product Product?      @relation(fields: [product_id], references: [product_id])
+  issues  ReceiptIssue[]
+}
+
+model ReceiptIssue {
+  issue_id        Int       @id @default(autoincrement())
+  receipt_id      Int
+  receipt_item_id Int?
+  created_at      DateTime  @default(now())
+  reason          String    @db.VarChar(200)
+  comment         String?   @db.Text
+  is_resolved     Boolean   @default(false)
+  resolved_at     DateTime?
+  resolved_by_id  Int?
+
+  receipt      GoodsReceipt      @relation(fields: [receipt_id],      references: [receipt_id])
+  receipt_item GoodsReceiptItem? @relation(fields: [receipt_item_id], references: [receipt_item_id])
+  resolved_by  User?             @relation("IssueResolver", fields: [resolved_by_id], references: [user_id])
 }
 
 model ReorderRequest {

@@ -13,6 +13,7 @@ import ReorderPage from './pages/Reorder';
 import ReportsPage from './pages/Reports';
 import UsersPage from './pages/Users';
 import AuditLogPage from './pages/AuditLog';
+import SuppliersPage from './pages/Suppliers';
 
 function PrivateRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { token, isAdmin } = useAuthStore();
@@ -76,6 +77,14 @@ export default function App() {
             element={
               <PrivateRoute adminOnly>
                 <AuditLogPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="suppliers"
+            element={
+              <PrivateRoute adminOnly>
+                <SuppliersPage />
               </PrivateRoute>
             }
           />

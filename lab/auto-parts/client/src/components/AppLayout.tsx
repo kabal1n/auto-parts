@@ -15,6 +15,7 @@ import {
   AuditOutlined,
   LogoutOutlined,
   ShopOutlined,
+  TruckOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/auth';
 import { useActiveStore } from '../store/activeStore';
@@ -34,6 +35,7 @@ const allItems = [
   { key: '/reports',   label: 'Отчёты',             icon: <BarChartOutlined />,    adminOnly: true  },
   { key: '/users',     label: 'Сотрудники',         icon: <UserOutlined />,        adminOnly: true  },
   { key: '/audit',     label: 'Журнал действий',    icon: <AuditOutlined />,       adminOnly: true  },
+  { key: '/suppliers', label: 'Поставщики',          icon: <TruckOutlined />,       adminOnly: true  },
 ];
 
 interface Store { store_id: number; name: string }

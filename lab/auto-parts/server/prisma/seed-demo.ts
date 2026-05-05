@@ -41,9 +41,20 @@ async function main() {
   console.log('✓ Пользователи (admin + kassir1)');
 
   // ── 3. Справочники (категории, производители, единицы измерения) ──────────
-  const catNames = ['Фильтры', 'Тормозная система', 'Зажигание', 'Двигатель', 'Масла и жидкости', 'Электрика', 'Подвеска'];
+  const catDefs: { name: string; markup_percent: number }[] = [
+    { name: 'Фильтры',           markup_percent: 50 },
+    { name: 'Тормозная система', markup_percent: 50 },
+    { name: 'Зажигание',         markup_percent: 50 },
+    { name: 'Двигатель',         markup_percent: 50 },
+    { name: 'Масла и жидкости',  markup_percent: 40 },
+    { name: 'Электрика',         markup_percent: 50 },
+    { name: 'Подвеска',          markup_percent: 50 },
+    { name: 'Аккумуляторы',      markup_percent: 30 },
+  ];
   const cats = await Promise.all(
-    catNames.map((name) => prisma.category.upsert({ where: { name }, update: {}, create: { name } })),
+    catDefs.map(({ name, markup_percent }) =>
+      prisma.category.upsert({ where: { name }, update: { markup_percent }, create: { name, markup_percent } }),
+    ),
   );
   const catMap = Object.fromEntries(cats.map((c) => [c.name, c.category_id]));
 
@@ -54,7 +65,7 @@ async function main() {
   const mfrMap = Object.fromEntries(mfrs.map((m) => [m.name, m.manufacturer_id]));
 
   const unitSht = await prisma.unit.upsert({ where: { name: 'шт' }, update: {}, create: { name: 'шт' } });
-  console.log(`✓ Справочники (${catNames.length} категорий, ${mfrNames.length} производителей, 1 ед.изм.)`);
+  console.log(`✓ Справочники (${catDefs.length} категорий, ${mfrNames.length} производителей, 1 ед.изм.)`);
 
   // ── 4. Товары ─────────────────────────────────────────────────────────────
   const productsData = [
@@ -91,7 +102,46 @@ async function main() {
   }
   console.log(`✓ Товары (${products.length})`);
 
-  // ── 5. Клиенты ───────────────────────────────────────────────────────────
+  // ── 5. Поставщики ─────────────────────────────────────────────────────────
+  const supplierDefs = [
+    {
+      name: 'АвтоДеталь ООО',
+      xls_config: {
+        startRow: 5,
+        article: 'B',
+        name: 'C',
+        barcode: 'D',
+        manufacturer: 'E',
+        quantity: 'F',
+        purchase_price: 'G',
+        supplierNameCells: ['B1', 'B2'],
+        aliases: ['АвтоДеталь', 'ООО АвтоДеталь', 'AutoDetail'],
+      },
+    },
+    {
+      name: 'МоторКомплект ЗАО',
+      xls_config: {
+        startRow: 4,
+        article: 'A',
+        name: 'B',
+        barcode: null,
+        manufacturer: 'C',
+        quantity: 'D',
+        purchase_price: 'E',
+        supplierNameCells: ['A1', 'A2', 'A3'],
+        aliases: ['МоторКомплект', 'ЗАО МоторКомплект'],
+      },
+    },
+  ];
+  for (const s of supplierDefs) {
+    const existing = await prisma.supplier.findFirst({ where: { name: s.name } });
+    if (!existing) {
+      await prisma.supplier.create({ data: s });
+    }
+  }
+  console.log(`✓ Поставщики (${supplierDefs.length})`);
+
+  // ── 6. Клиенты ───────────────────────────────────────────────────────────
   const cs1 = await prisma.customerStatus.findFirst({ where: { name: 'Обычный' } });
   const cs2 = await prisma.customerStatus.findFirst({ where: { name: 'Постоянный' } });
   const cs3 = await prisma.customerStatus.findFirst({ where: { name: 'VIP' } });

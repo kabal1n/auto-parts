@@ -1,19 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Card, Statistic, Table, Typography, Tag } from 'antd';
+import { Row, Col, Card, Statistic, Table, Typography, Tag, Button, message } from 'antd';
 import {
   ShoppingCartOutlined,
   WarningOutlined,
   RiseOutlined,
+  AlertOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { reportsApi, stockApi, salesApi } from '../../api';
+import { reportsApi, stockApi, salesApi, receiptsApi } from '../../api';
 import { useActiveStore } from '../../store/activeStore';
 import StoreGuard from '../../components/StoreGuard';
 
 interface SalesTotals { count: number; subtotal: number; discount: number; total: number; cash: number; card: number }
 interface LowStockItem { stock_id: number; quantity: number; minimum_quantity: number; product: { name: string; article: string | null } }
 interface RecentSale { sale_id: number; sale_datetime: string; total_amount: number; cash_amount: number; card_amount: number; customer: { last_name: string; first_name: string } | null; items: unknown[] }
+interface ReceiptIssue {
+  issue_id: number;
+  created_at: string;
+  reason: string;
+  comment: string | null;
+  receipt: { receipt_id: number; receipt_datetime: string };
+  receipt_item: { raw_name: string | null; raw_article: string | null } | null;
+}
 
 export default function DashboardPage() {
   const { activeStoreId } = useActiveStore();
@@ -21,6 +30,24 @@ export default function DashboardPage() {
   const [lowStock, setLowStock] = useState<LowStockItem[]>([]);
   const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
   const [loading, setLoading] = useState(false);
+  const [issues, setIssues] = useState<ReceiptIssue[]>([]);
+  const [resolvingId, setResolvingId] = useState<number | null>(null);
+
+  const loadIssues = () => {
+    receiptsApi.issues().then((r) => setIssues(r.data));
+  };
+
+  const resolveIssue = async (id: number) => {
+    setResolvingId(id);
+    try {
+      await receiptsApi.resolveIssue(id);
+      message.success('Проблема закрыта');
+      loadIssues();
+    } catch { message.error('Ошибка'); }
+    finally { setResolvingId(null); }
+  };
+
+  useEffect(() => { loadIssues(); }, []);
 
   useEffect(() => {
     if (!activeStoreId) return;
@@ -157,6 +184,38 @@ export default function DashboardPage() {
           />
         </Col>
       </Row>
+
+      {issues.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <Typography.Title level={5} style={{ color: '#d46b08' }}>
+            <AlertOutlined style={{ marginRight: 6 }} />
+            Проблемы с приёмкой ({issues.length})
+          </Typography.Title>
+          <Table
+            dataSource={issues}
+            rowKey="issue_id"
+            size="small"
+            pagination={false}
+            scroll={{ y: 240 }}
+            columns={[
+              { title: 'Поступление', key: 'receipt', width: 110,
+                render: (_: unknown, r: ReceiptIssue) => `№${r.receipt.receipt_id}` },
+              { title: 'Дата', key: 'dt', width: 140,
+                render: (_: unknown, r: ReceiptIssue) => dayjs(r.created_at).format('DD.MM.YYYY HH:mm') },
+              { title: 'Товар (XLS)', key: 'item', ellipsis: true,
+                render: (_: unknown, r: ReceiptIssue) => r.receipt_item?.raw_name ?? '—' },
+              { title: 'Причина', dataIndex: 'reason', key: 'reason', ellipsis: true },
+              { title: 'Комментарий', dataIndex: 'comment', key: 'comment', ellipsis: true },
+              { title: '', key: 'act', width: 90,
+                render: (_: unknown, r: ReceiptIssue) => (
+                  <Button size="small" loading={resolvingId === r.issue_id}
+                    onClick={() => resolveIssue(r.issue_id)}>Закрыть</Button>
+                ),
+              },
+            ] as import('antd/es/table').ColumnsType<ReceiptIssue>}
+          />
+        </div>
+      )}
     </StoreGuard>
   );
 }
