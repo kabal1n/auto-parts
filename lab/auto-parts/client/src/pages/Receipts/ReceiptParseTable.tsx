@@ -190,21 +190,21 @@ export default function ReceiptParseTable({ receiptId, initialItems, status, onS
 
   const columns: ColumnsType<ReceiptItem> = [
     { title: '#', key: 'idx', width: 45, render: (_: unknown, __: unknown, i: number) => i + 1 },
-    { title: 'Артикул (XLS)', dataIndex: 'raw_article', key: 'art', width: 110, ellipsis: true },
-    { title: 'Название (XLS)', dataIndex: 'raw_name', key: 'rname', ellipsis: true,
+    { title: 'Артикул (XLS)', dataIndex: 'raw_article', key: 'art', width: 100, ellipsis: true },
+    { title: 'Название (XLS)', dataIndex: 'raw_name', key: 'rname', ellipsis: true, width: 250,
       render: (v: string, item: ReceiptItem) => (
         item.product ? <Tooltip title={v}><span style={{ color: '#52c41a' }}>{item.product.name}</span></Tooltip> : v
       ),
     },
-    { title: 'Произв.', dataIndex: 'raw_manufacturer', key: 'mfr', width: 110, ellipsis: true },
-    { title: 'Кол-во', dataIndex: 'quantity', key: 'qty', width: 65 },
+    { title: 'Произв.', dataIndex: 'raw_manufacturer', key: 'mfr', width: 80, ellipsis: true },
+    { title: 'Кол-во', dataIndex: 'quantity', key: 'qty', width: 52, align: 'center' as const },
     {
-      title: 'Закуп. ₽', key: 'pp', width: 100,
+      title: 'Закуп. ₽', key: 'pp', width: 88,
       render: (_: unknown, item: ReceiptItem) => (
         isDraft && item.match_status !== 'issue' ? (
           <InputNumber
             value={Number(item.purchase_price)} min={0} step={0.01} precision={2}
-            size="small" style={{ width: 90 }}
+            size="small" style={{ width: 78 }}
             onChange={(v) => handlePriceChange(item, 'purchase_price', v)}
           />
         ) : `${Number(item.purchase_price).toFixed(2)} ₽`
@@ -223,7 +223,7 @@ export default function ReceiptParseTable({ receiptId, initialItems, status, onS
       ),
     },
     {
-      title: 'Обнов. цену', key: 'upd', width: 90,
+      title: 'Обнов. цену', key: 'upd', width: 60, align: 'center' as const,
       render: (_: unknown, item: ReceiptItem) => (
         item.match_status === 'matched' && isDraft ? (
           <Checkbox
@@ -234,11 +234,11 @@ export default function ReceiptParseTable({ receiptId, initialItems, status, onS
       ),
     },
     {
-      title: 'Статус', key: 'status', width: 140,
+      title: 'Статус', key: 'status', width: 100, align: 'center' as const,
       render: (_: unknown, item: ReceiptItem) => matchTag(item),
     },
     {
-      title: 'Действия', key: 'actions', width: 180,
+      title: 'Действия', key: 'actions', width: 180, fixed: 'right' as const,
       render: (_: unknown, item: ReceiptItem) => {
         if (!isDraft) return null;
         if (item.match_status === 'pending') {
@@ -262,7 +262,8 @@ export default function ReceiptParseTable({ receiptId, initialItems, status, onS
         rowKey="receipt_item_id"
         size="small"
         pagination={false}
-        scroll={{ x: 1000 }}
+        tableLayout="fixed"
+        scroll={{ x: 875 }}
       />
 
       {isDraft && (

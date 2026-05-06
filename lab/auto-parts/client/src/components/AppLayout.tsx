@@ -30,7 +30,7 @@ const allItems = [
   { key: '/stock',     label: 'Остатки',            icon: <DatabaseOutlined />,    adminOnly: false },
   { key: '/customers', label: 'Клиенты',            icon: <TeamOutlined />,        adminOnly: false },
   { key: '/orders',    label: 'Заказы клиентов',    icon: <FileTextOutlined />,    adminOnly: false },
-  { key: '/receipts',  label: 'Поступления',        icon: <InboxOutlined />,       adminOnly: true  },
+  { key: '/receipts',  label: 'Поступления',        icon: <InboxOutlined />,       adminOnly: false },
   { key: '/reorder',   label: 'Заявки на закупку',  icon: <UnorderedListOutlined />, adminOnly: false },
   { key: '/reports',   label: 'Отчёты',             icon: <BarChartOutlined />,    adminOnly: true  },
   { key: '/users',     label: 'Сотрудники',         icon: <UserOutlined />,        adminOnly: true  },

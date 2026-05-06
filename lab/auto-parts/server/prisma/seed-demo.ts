@@ -103,34 +103,24 @@ async function main() {
   console.log(`✓ Товары (${products.length})`);
 
   // ── 5. Поставщики ─────────────────────────────────────────────────────────
+  const xlsConfig = {
+    startRow: 10,
+    article: 'B',
+    name: 'D',
+    barcode: 'J',
+    manufacturer: 'E',
+    quantity: 'G',
+    purchase_price: 'H',
+    supplierNameCells: ['C3'],
+  };
   const supplierDefs = [
     {
-      name: 'АвтоДеталь ООО',
-      xls_config: {
-        startRow: 5,
-        article: 'B',
-        name: 'C',
-        barcode: 'D',
-        manufacturer: 'E',
-        quantity: 'F',
-        purchase_price: 'G',
-        supplierNameCells: ['B1', 'B2'],
-        aliases: ['АвтоДеталь', 'ООО АвтоДеталь', 'AutoDetail'],
-      },
+      name: 'АО "ДАРС"',
+      xls_config: { ...xlsConfig, aliases: ['ДАРС', 'АО ДАРС', '"ДАРС"'] },
     },
     {
-      name: 'МоторКомплект ЗАО',
-      xls_config: {
-        startRow: 4,
-        article: 'A',
-        name: 'B',
-        barcode: null,
-        manufacturer: 'C',
-        quantity: 'D',
-        purchase_price: 'E',
-        supplierNameCells: ['A1', 'A2', 'A3'],
-        aliases: ['МоторКомплект', 'ЗАО МоторКомплект'],
-      },
+      name: 'ООО ТД "Агидель Авто"',
+      xls_config: { ...xlsConfig, aliases: ['Агидель Авто', 'Агидель', 'ТД Агидель'] },
     },
   ];
   for (const s of supplierDefs) {

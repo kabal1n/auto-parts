@@ -47,14 +47,7 @@ export default function App() {
           <Route path="stock" element={<StockPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="orders" element={<OrdersPage />} />
-          <Route
-            path="receipts"
-            element={
-              <PrivateRoute adminOnly>
-                <ReceiptsPage />
-              </PrivateRoute>
-            }
-          />
+          <Route path="receipts" element={<ReceiptsPage />} />
           <Route path="reorder" element={<ReorderPage />} />
           <Route
             path="reports"

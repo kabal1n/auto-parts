@@ -39,8 +39,8 @@ function parseXls(buffer: Buffer, config: XlsConfig): RawRow[] {
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows: RawRow[] = [];
   for (let r = config.startRow; ; r++) {
-    const name = ws[`${config.name}${r}`]?.v ?? null;
-    if (!name) break;
+    const name = ws[`${config.name}${r}`]?.v ? String(ws[`${config.name}${r}`].v) : null;
+    if (!name || /^(итог|всего|total)/i.test(name.trim())) break;
     rows.push({
       article:        ws[`${config.article}${r}`]?.v ? String(ws[`${config.article}${r}`].v) : null,
       name:           String(name),
@@ -67,11 +67,23 @@ function verifySupplier(buffer: Buffer, config: XlsConfig): boolean {
   );
 }
 
+function calcSalePrice(purchasePrice: number, markupPercent: unknown): number {
+  return Math.round(purchasePrice * (1 + Number(markupPercent ?? 50) / 100));
+}
+
+const productCategoryInclude = { category: { select: { markup_percent: true } } } as const;
+
 async function matchProduct(row: RawRow) {
   // 1. By barcode
   if (row.barcode) {
-    const p = await prisma.product.findUnique({ where: { barcode: row.barcode } });
-    if (p) return { product_id: p.product_id, matchStatus: 'matched' };
+    const p = await prisma.product.findUnique({
+      where: { barcode: row.barcode },
+      include: productCategoryInclude,
+    });
+    if (p) return {
+      product_id: p.product_id, matchStatus: 'matched',
+      sale_price: calcSalePrice(row.purchase_price, p.category?.markup_percent),
+    };
   }
   // 2. By article + manufacturer
   if (row.article && row.manufacturer) {
@@ -80,17 +92,25 @@ async function matchProduct(row: RawRow) {
         article: { equals: row.article, mode: 'insensitive' },
         manufacturer: { is: { name: { equals: row.manufacturer, mode: 'insensitive' } } },
       },
+      include: productCategoryInclude,
     });
-    if (p) return { product_id: p.product_id, matchStatus: 'matched' };
+    if (p) return {
+      product_id: p.product_id, matchStatus: 'matched',
+      sale_price: calcSalePrice(row.purchase_price, p.category?.markup_percent),
+    };
   }
   // 3. By article alone (only if unambiguous)
   if (row.article) {
     const ps = await prisma.product.findMany({
       where: { article: { equals: row.article, mode: 'insensitive' } },
+      include: productCategoryInclude,
     });
-    if (ps.length === 1) return { product_id: ps[0].product_id, matchStatus: 'matched' };
+    if (ps.length === 1) return {
+      product_id: ps[0].product_id, matchStatus: 'matched',
+      sale_price: calcSalePrice(row.purchase_price, ps[0].category?.markup_percent),
+    };
   }
-  return { product_id: null, matchStatus: 'pending' };
+  return { product_id: null, matchStatus: 'pending', sale_price: 0 };
 }
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -206,8 +226,8 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
 
   // Match each row to a product
   const matched = await Promise.all(rows.map(async (row) => {
-    const { product_id, matchStatus } = await matchProduct(row);
-    return { row, product_id, matchStatus };
+    const { product_id, matchStatus, sale_price } = await matchProduct(row);
+    return { row, product_id, matchStatus, sale_price };
   }));
 
   // Create receipt in transaction
@@ -217,14 +237,14 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
         store_id,
         user_id: req.user!.user_id,
         supplier_id,
-        file_name: file.originalname,
+        file_name: Buffer.from(file.originalname, 'latin1').toString('utf8'),
         status: 'DRAFT',
         items: {
-          create: matched.map(({ row, product_id, matchStatus }) => ({
+          create: matched.map(({ row, product_id, matchStatus, sale_price }) => ({
             product_id: product_id ?? undefined,
             quantity: row.quantity,
             purchase_price: row.purchase_price,
-            sale_price: 0,
+            sale_price,
             match_status: matchStatus,
             raw_article: row.article,
             raw_name: row.name,
@@ -243,7 +263,7 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
   });
 
   await logAction(req.user!.user_id, 'CREATE', 'goods_receipts', receipt.receipt_id,
-    `Загружена накладная: ${file.originalname} (${rows.length} стр.)`);
+    `Загружена накладная: ${Buffer.from(file.originalname, 'latin1').toString('utf8')} (${rows.length} стр.)`);
   res.status(201).json(receipt);
 });
 
