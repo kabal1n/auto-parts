@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { logAction } from '../lib/audit';
 import { requireRole } from '../middleware/requireRole';
@@ -88,21 +89,29 @@ router.post('/', async (req: Request, res: Response) => {
     resolvedUnitId = sht?.unit_id ?? null;
   }
 
-  const product = await prisma.product.create({
-    data: {
-      name,
-      article: article || null,
-      barcode: barcode || null,
-      category_id: category_id ? Number(category_id) : null,
-      manufacturer_id: manufacturer_id ? Number(manufacturer_id) : null,
-      unit_id: resolvedUnitId,
-      price,
-      description: description || null,
-    },
-    include: PRODUCT_INCLUDE,
-  });
-  await logAction(req.user!.user_id, 'CREATE', 'products', product.product_id, `Создан товар: ${name}`);
-  res.status(201).json(flattenProduct(product));
+  try {
+    const product = await prisma.product.create({
+      data: {
+        name,
+        article: article || null,
+        barcode: barcode || null,
+        category_id: category_id ? Number(category_id) : null,
+        manufacturer_id: manufacturer_id ? Number(manufacturer_id) : null,
+        unit_id: resolvedUnitId,
+        price,
+        description: description || null,
+      },
+      include: PRODUCT_INCLUDE,
+    });
+    await logAction(req.user!.user_id, 'CREATE', 'products', product.product_id, `Создан товар: ${name}`);
+    res.status(201).json(flattenProduct(product));
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      res.status(409).json({ error: 'Товар с таким штрих-кодом уже существует' });
+      return;
+    }
+    throw e;
+  }
 });
 
 router.put('/:id', async (req: Request, res: Response) => {
