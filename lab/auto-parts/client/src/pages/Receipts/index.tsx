@@ -25,7 +25,6 @@ interface ReceiptItem {
   quantity: number;
   purchase_price: number;
   sale_price: number;
-  update_product_price: boolean;
   match_status: string;
   raw_article: string | null;
   raw_name: string | null;

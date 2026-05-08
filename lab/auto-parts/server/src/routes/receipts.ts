@@ -267,16 +267,15 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
   res.status(201).json(receipt);
 });
 
-// PATCH item — update prices, update_product_price flag
+// PATCH item — update prices
 router.patch('/:id/items/:itemId', async (req: Request, res: Response) => {
   const itemId = Number(req.params.itemId);
-  const { purchase_price, sale_price, update_product_price } = req.body;
+  const { purchase_price, sale_price } = req.body;
   const item = await prisma.goodsReceiptItem.update({
     where: { receipt_item_id: itemId },
     data: {
       ...(purchase_price !== undefined ? { purchase_price } : {}),
       ...(sale_price !== undefined ? { sale_price } : {}),
-      ...(update_product_price !== undefined ? { update_product_price } : {}),
     },
     include: { product: true, issues: true },
   });
@@ -319,7 +318,6 @@ router.post('/:id/items/:itemId/create-product', async (req: Request, res: Respo
         product_id: product.product_id,
         purchase_price: purchase_price ?? existing.purchase_price,
         sale_price,
-        update_product_price: true,
         match_status: 'created',
       },
       include: { product: true, issues: true },
@@ -396,12 +394,10 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
           create: { store_id: receipt.store_id, product_id: item.product_id!, quantity: item.quantity },
           update: { quantity: { increment: item.quantity } },
         });
-        if (item.update_product_price) {
-          await tx.product.update({
-            where: { product_id: item.product_id! },
-            data: { price: item.sale_price },
-          });
-        }
+        await tx.product.update({
+          where: { product_id: item.product_id! },
+          data: { price: item.sale_price },
+        });
       }
       await tx.goodsReceipt.update({ where: { receipt_id: receiptId }, data: { status: 'POSTED' } });
     });

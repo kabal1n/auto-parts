@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Table, Button, Tag, InputNumber, Checkbox, Modal, Form, Input,
+  Table, Button, Tag, InputNumber, Modal, Form, Input,
   Select, Space, Typography, message, Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -26,7 +26,6 @@ interface ReceiptItem {
   quantity: number;
   purchase_price: number;
   sale_price: number;
-  update_product_price: boolean;
   match_status: string;
   raw_article: string | null;
   raw_name: string | null;
@@ -81,14 +80,6 @@ export default function ReceiptParseTable({ receiptId, initialItems, status, onS
     try {
       await receiptsApi.patchItem(receiptId, item.receipt_item_id, { [field]: value });
     } catch { message.error('Не удалось обновить цену'); }
-  };
-
-  const handleUpdatePriceChange = async (item: ReceiptItem, checked: boolean) => {
-    const updated = { ...item, update_product_price: checked };
-    setItems((prev) => prev.map((i) => i.receipt_item_id === item.receipt_item_id ? updated : i));
-    try {
-      await receiptsApi.patchItem(receiptId, item.receipt_item_id, { update_product_price: checked });
-    } catch { message.error('Не удалось сохранить'); }
   };
 
   // New product modal
@@ -220,17 +211,6 @@ export default function ReceiptParseTable({ receiptId, initialItems, status, onS
             onChange={(v) => handlePriceChange(item, 'sale_price', v)}
           />
         ) : `${Number(item.sale_price).toFixed(0)} ₽`
-      ),
-    },
-    {
-      title: 'Обнов. цену', key: 'upd', width: 60, align: 'center' as const,
-      render: (_: unknown, item: ReceiptItem) => (
-        item.match_status === 'matched' && isDraft ? (
-          <Checkbox
-            checked={item.update_product_price}
-            onChange={(e) => handleUpdatePriceChange(item, e.target.checked)}
-          />
-        ) : null
       ),
     },
     {

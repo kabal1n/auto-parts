@@ -272,7 +272,6 @@ model GoodsReceiptItem {
   quantity             Int
   purchase_price       Decimal @db.Decimal(10, 2)
   sale_price           Decimal @db.Decimal(10, 2)
-  update_product_price Boolean @default(false)
   match_status         String  @default("pending") @db.VarChar(20)
   raw_article          String? @db.VarChar(100)
   raw_name             String? @db.VarChar(300)
