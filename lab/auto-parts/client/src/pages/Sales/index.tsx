@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Row, Col, Input, Button, Table, InputNumber, Typography,
   Space, Flex, Divider, Modal, Radio, Statistic, message, Tag, AutoComplete,
 } from 'antd';
 import { DeleteOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { productsApi, customersApi, salesApi } from '../../api';
+import { productsApi, customersApi, salesApi, stockApi } from '../../api';
 import { maskPhone, formatPhone } from '../../utils/phone';
 import { useActiveStore } from '../../store/activeStore';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
@@ -29,6 +29,19 @@ export default function SalesPage() {
   const [mixedCash, setMixedCash] = useState(0);
   const [mixedCard, setMixedCard] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [stockMap, setStockMap] = useState<Record<number, number>>({});
+
+  const loadStock = useCallback(async () => {
+    if (!activeStoreId) return;
+    try {
+      const res = await stockApi.list({ store_id: activeStoreId });
+      const map: Record<number, number> = {};
+      for (const s of res.data) map[s.product_id] = s.quantity;
+      setStockMap(map);
+    } catch { /* stock validation still enforced on backend */ }
+  }, [activeStoreId]);
+
+  useEffect(() => { loadStock(); }, [loadStock]);
 
   useBarcodeScanner((barcode) => {
     productsApi.byBarcode(barcode)
@@ -49,8 +62,20 @@ export default function SalesPage() {
   };
 
   const addToCart = (product: Product) => {
+    const stockQty = stockMap[product.product_id];
     setCart((prev) => {
       const existing = prev.find((i) => i.product_id === product.product_id);
+      if (stockQty !== undefined) {
+        if (existing) {
+          if (existing.quantity >= stockQty) {
+            message.warning(`Максимальное количество (${stockQty}) уже добавлено в корзину`);
+            return prev;
+          }
+        } else if (stockQty === 0) {
+          message.warning(`Товар "${product.name}" отсутствует на складе`);
+          return prev;
+        }
+      }
       if (existing) return prev.map((i) => i.product_id === product.product_id ? { ...i, quantity: i.quantity + 1 } : i);
       return [...prev, { ...product, quantity: 1 }];
     });
@@ -60,7 +85,9 @@ export default function SalesPage() {
 
   const updateQty = (id: number, qty: number) => {
     if (qty <= 0) { setCart((c) => c.filter((i) => i.product_id !== id)); return; }
-    setCart((c) => c.map((i) => i.product_id === id ? { ...i, quantity: qty } : i));
+    const stockQty = stockMap[id];
+    const clamped = (stockQty !== undefined && qty > stockQty) ? stockQty : qty;
+    setCart((c) => c.map((i) => i.product_id === id ? { ...i, quantity: clamped } : i));
   };
 
   const onPhoneChange = async (val: string) => {
@@ -130,6 +157,7 @@ export default function SalesPage() {
         items: cart.map((i) => ({ product_id: i.product_id, quantity: i.quantity, price: Number(i.price) })),
       });
       message.success('Продажа оформлена');
+      loadStock();
       setCart([]);
       setCustomer(null);
       setCustomerSearch('');
@@ -148,7 +176,7 @@ export default function SalesPage() {
     {
       title: 'Кол-во', key: 'qty', width: 110,
       render: (_: unknown, item: CartItem) => (
-        <InputNumber min={0} value={item.quantity} size="small" style={{ width: 80 }}
+        <InputNumber min={0} max={stockMap[item.product_id]} value={item.quantity} size="small" style={{ width: 80 }}
           onChange={(v) => updateQty(item.product_id, v ?? 0)} />
       ),
     },
