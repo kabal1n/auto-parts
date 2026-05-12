@@ -43,24 +43,6 @@ export default function SalesPage() {
 
   useEffect(() => { loadStock(); }, [loadStock]);
 
-  useBarcodeScanner((barcode) => {
-    productsApi.byBarcode(barcode)
-      .then((res) => addToCart(res.data))
-      .catch(() => message.warning(`Товар со штрих-кодом ${barcode} не найден`));
-  });
-
-  const searchProducts = async (val: string) => {
-    if (!val) { setProductOptions([]); return; }
-    const res = await productsApi.list({ search: val });
-    setProductOptions(
-      res.data.map((p: Product) => ({
-        value: String(p.product_id),
-        label: `${p.name} — ${Number(p.price).toFixed(2)} ₽`,
-        product: p,
-      })),
-    );
-  };
-
   const addToCart = (product: Product) => {
     const stockQty = stockMap[product.product_id];
     setCart((prev) => {
@@ -81,6 +63,24 @@ export default function SalesPage() {
     });
     setProductSearch('');
     setProductOptions([]);
+  };
+
+  useBarcodeScanner((barcode) => {
+    productsApi.byBarcode(barcode)
+      .then((res) => addToCart(res.data))
+      .catch(() => message.warning(`Товар со штрих-кодом ${barcode} не найден`));
+  });
+
+  const searchProducts = async (val: string) => {
+    if (!val) { setProductOptions([]); return; }
+    const res = await productsApi.list({ search: val });
+    setProductOptions(
+      res.data.map((p: Product) => ({
+        value: String(p.product_id),
+        label: `${p.name} — ${Number(p.price).toFixed(2)} ₽`,
+        product: p,
+      })),
+    );
   };
 
   const updateQty = (id: number, qty: number) => {

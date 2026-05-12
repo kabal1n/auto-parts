@@ -89,6 +89,10 @@ export const ordersApi = {
   create: (data: unknown) => api.post('/orders', data),
   statuses: () => api.get('/orders/statuses'),
   setStatus: (id: number, order_status_id: number) => api.patch(`/orders/${id}/status`, { order_status_id }),
+  update: (id: number, data: { expected_date?: string | null; notes?: string | null }) =>
+    api.patch(`/orders/${id}`, data),
+  checkout: (id: number, data: { cash_amount: number; card_amount: number }) =>
+    api.post(`/orders/${id}/checkout`, data),
 };
 
 // Receipts

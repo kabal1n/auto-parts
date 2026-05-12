@@ -43,7 +43,11 @@ router.get('/', async (req: Request, res: Response) => {
     include: { product: { include: PRODUCT_INCLUDE }, store: true },
     orderBy: { product: { name: 'asc' } },
   });
-  res.json(stock.map((s) => ({ ...s, product: flattenStockProduct(s.product) })));
+  res.json(stock.map((s) => ({
+    ...s,
+    available_quantity: s.quantity - s.reserved_quantity,
+    product: flattenStockProduct(s.product),
+  })));
 });
 
 router.get('/low', async (req: Request, res: Response) => {
@@ -52,7 +56,11 @@ router.get('/low', async (req: Request, res: Response) => {
     where: store_id ? { store_id: Number(store_id) } : {},
     include: { product: { include: PRODUCT_INCLUDE }, store: true },
   });
-  const flattened = all.map((s) => ({ ...s, product: flattenStockProduct(s.product) }));
+  const flattened = all.map((s) => ({
+    ...s,
+    available_quantity: s.quantity - s.reserved_quantity,
+    product: flattenStockProduct(s.product),
+  }));
   res.json(flattened.filter((s) => s.quantity <= s.minimum_quantity));
 });
 

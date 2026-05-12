@@ -126,11 +126,12 @@ model Product {
 }
 
 model StockByStore {
-  stock_id         Int @id @default(autoincrement())
-  store_id         Int
-  product_id       Int
-  quantity         Int @default(0)
-  minimum_quantity Int @default(0)
+  stock_id          Int @id @default(autoincrement())
+  store_id          Int
+  product_id        Int
+  quantity          Int @default(0)
+  minimum_quantity  Int @default(0)
+  reserved_quantity Int @default(0)
 
   store   Store   @relation(fields: [store_id], references: [store_id])
   product Product @relation(fields: [product_id], references: [product_id])
@@ -219,9 +220,14 @@ model CustomerOrder {
   customer_order_id Int      @id @default(autoincrement())
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
+  subtotal_amount   Decimal  @default(0) @db.Decimal(10, 2)
+  discount_percent  Decimal  @default(0) @db.Decimal(5, 2)
+  discount_amount   Decimal  @default(0) @db.Decimal(10, 2)
   total_amount      Decimal  @db.Decimal(10, 2)
   prepayment_amount Decimal  @default(0) @db.Decimal(10, 2)
   amount_due        Decimal  @db.Decimal(10, 2)
+  expected_date     DateTime? @db.Date
+  notes             String?  @db.Text
   client_id         Int
   user_id           Int
   store_id          Int

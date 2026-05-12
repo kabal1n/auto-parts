@@ -66,8 +66,10 @@ router.post('/', async (req: Request, res: Response) => {
       const stock = await tx.stockByStore.findUnique({
         where: { store_id_product_id: { store_id: Number(store_id), product_id: item.product_id } },
       });
-      if (!stock || stock.quantity < item.quantity) {
-        throw new Error(`Недостаточно товара #${item.product_id} на складе`);
+      const available = stock ? stock.quantity - stock.reserved_quantity : 0;
+      if (!stock || available < item.quantity) {
+        const label = item.product_id;
+        throw new Error(`Недостаточно товара #${label} на складе (доступно: ${available})`);
       }
       await tx.stockByStore.update({
         where: { stock_id: stock.stock_id },

@@ -22,27 +22,30 @@ const ACTION_LABELS: Record<string, string> = {
   DELETE: 'Удаление',
 };
 
+async function fetchLogs(params: Record<string, string> = {}) {
+  return auditApi.list({ limit: '500', ...params });
+}
+
 export default function AuditLogPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [entity, setEntity] = useState('');
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = { limit: '500' };
-      if (range) {
-        params.from = range[0].startOf('day').toISOString();
-        params.to = range[1].endOf('day').toISOString();
-      }
-      if (entity) params.entity_name = entity;
-      const res = await auditApi.list(params);
-      setLogs(res.data);
-    } finally { setLoading(false); }
-  };
+  useEffect(() => {
+    fetchLogs().then((res) => setLogs(res.data)).finally(() => setLoading(false));
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  const search = () => {
+    const params: Record<string, string> = {};
+    if (range) {
+      params.from = range[0].startOf('day').toISOString();
+      params.to = range[1].endOf('day').toISOString();
+    }
+    if (entity) params.entity_name = entity;
+    setLoading(true);
+    fetchLogs(params).then((res) => setLogs(res.data)).finally(() => setLoading(false));
+  };
 
   return (
     <>
@@ -60,7 +63,7 @@ export default function AuditLogPage() {
           allowClear
           style={{ width: 200 }}
         />
-        <Button type="primary" icon={<SearchOutlined />} onClick={load}>Найти</Button>
+        <Button type="primary" icon={<SearchOutlined />} onClick={search}>Найти</Button>
       </div>
 
       <Table

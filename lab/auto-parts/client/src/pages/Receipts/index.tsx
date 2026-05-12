@@ -84,13 +84,6 @@ export default function ReceiptsPage() {
   const [detail, setDetail] = useState<Receipt | null>(null);
   const [postingId, setPostingId] = useState<number | null>(null);
 
-  useBarcodeScanner((barcode) => {
-    if (!createOpen) return;
-    productsApi.byBarcode(barcode)
-      .then((res) => addItem(res.data))
-      .catch(() => message.warning(`Товар со штрих-кодом ${barcode} не найден`));
-  });
-
   const load = async () => {
     setLoading(true);
     try {
@@ -120,6 +113,13 @@ export default function ReceiptsPage() {
     if (cartItems.find((i) => i.product_id === product.product_id)) return;
     setCartItems((c) => [...c, { product_id: product.product_id, name: product.name, quantity: 1, purchase_price: 0, sale_price: Number(product.price) }]);
   };
+
+  useBarcodeScanner((barcode) => {
+    if (!createOpen) return;
+    productsApi.byBarcode(barcode)
+      .then((res) => addItem(res.data))
+      .catch(() => message.warning(`Товар со штрих-кодом ${barcode} не найден`));
+  });
 
   const createManual = async () => {
     if (!cartItems.length) { message.warning('Добавьте товары'); return; }
