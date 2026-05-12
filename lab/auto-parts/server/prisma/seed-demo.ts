@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { PrismaClient, ReorderStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
