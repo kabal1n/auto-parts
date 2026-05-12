@@ -45,7 +45,7 @@ router.get('/', async (req: Request, res: Response) => {
   });
   res.json(stock.map((s) => ({
     ...s,
-    available_quantity: s.quantity - s.reserved_quantity,
+    available_quantity: Math.max(0, s.quantity - s.reserved_quantity),
     product: flattenStockProduct(s.product),
   })));
 });
@@ -58,7 +58,7 @@ router.get('/low', async (req: Request, res: Response) => {
   });
   const flattened = all.map((s) => ({
     ...s,
-    available_quantity: s.quantity - s.reserved_quantity,
+    available_quantity: Math.max(0, s.quantity - s.reserved_quantity),
     product: flattenStockProduct(s.product),
   }));
   res.json(flattened.filter((s) => s.quantity <= s.minimum_quantity));

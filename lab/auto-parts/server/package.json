@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "db:seed": "ts-node prisma/seed.ts",
-    "db:demo": "ts-node prisma/seed-demo.ts"
+    "db:demo": "ts-node prisma/seed-demo.ts",
+    "db:recalc-reserves": "ts-node prisma/recalc-reserves.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
