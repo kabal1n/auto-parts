@@ -113,6 +113,20 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
+    await tx.reorderRequest.create({
+      data: {
+        store_id: Number(store_id),
+        user_id: req.user!.user_id,
+        comment: [
+          `Заказ клиента #${created.customer_order_id} — ${created.customer.last_name} ${created.customer.first_name}, ${created.customer.phone}`,
+          notes || null,
+        ].filter(Boolean).join(' — ') || null,
+        items: {
+          create: items.map((i) => ({ product_id: i.product_id, required_quantity: i.quantity })),
+        },
+      },
+    });
+
     return created;
   });
 

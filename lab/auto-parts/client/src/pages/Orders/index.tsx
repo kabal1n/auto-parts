@@ -52,9 +52,9 @@ export default function OrdersPage() {
   // Create modal
   const [createOpen, setCreateOpen] = useState(false);
   const [form] = Form.useForm();
-  const [cartItems, setCartItems] = useState<Array<{ product_id: number; name: string; quantity: number; price: number }>>([]);
+  const [cartItems, setCartItems] = useState<Array<{ product_id: number; name: string; article: string | null; quantity: number; price: number }>>([]);
   const [productSearch, setProductSearch] = useState('');
-  const [productOptions, setProductOptions] = useState<{ value: string; label: string; product: { product_id: number; name: string; price: number } }[]>([]);
+  const [productOptions, setProductOptions] = useState<{ value: string; label: string; product: { product_id: number; name: string; article: string | null; price: number } }[]>([]);
   const [customerOptions, setCustomerOptions] = useState<{ value: string; label: string; client_id: number; discount: number }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
   const [selectedDiscount, setSelectedDiscount] = useState(0);
@@ -95,7 +95,7 @@ export default function OrdersPage() {
   const searchProducts = async (val: string) => {
     if (!val) return;
     const res = await productsApi.list({ search: val });
-    setProductOptions(res.data.map((p: { product_id: number; name: string; price: number }) => ({
+    setProductOptions(res.data.map((p: { product_id: number; name: string; article: string | null; price: number }) => ({
       value: String(p.product_id), label: `${p.name} — ${Number(p.price).toFixed(2)} ₽`, product: p,
     })));
   };
@@ -125,10 +125,10 @@ export default function OrdersPage() {
     }
   };
 
-  const addItem = (product: { product_id: number; name: string; price: number }) => {
+  const addItem = (product: { product_id: number; name: string; article: string | null; price: number }) => {
     setCartItems((prev) => {
       if (prev.find((i) => i.product_id === product.product_id)) return prev;
-      return [...prev, { product_id: product.product_id, name: product.name, quantity: 1, price: product.price }];
+      return [...prev, { product_id: product.product_id, name: product.name, article: product.article ?? null, quantity: 1, price: product.price }];
     });
   };
 
@@ -297,7 +297,7 @@ export default function OrdersPage() {
 
       {/* Create order modal */}
       <Modal open={createOpen} title="Новый заказ клиента" onOk={createOrder} onCancel={() => { setCreateOpen(false); setCartItems([]); setProductSearch(''); setProductOptions([]); setSelectedClientId(null); setSelectedDiscount(0); setCustomerCars([]); setNotesValue(''); form.resetFields(); }}
-        width={860}
+        width={980}
         okText="Создать" cancelText="Отмена">
         <Form form={form} layout="vertical" style={{ marginTop: 12 }}>
           <Row gutter={20} style={{ height: 460 }}>
@@ -309,7 +309,7 @@ export default function OrdersPage() {
                 <AutoComplete
                   value={productSearch}
                   options={productOptions}
-                  onChange={(val) => { setProductSearch(val); searchProducts(val); }}
+                  onChange={(val) => { setProductSearch(val); if (!val) { setProductOptions([]); return; } searchProducts(val); }}
                   onSelect={(_v, opt) => { addItem(opt.product); setProductSearch(''); setProductOptions([]); }}
                   placeholder="Поиск по названию или артикулу..."
                   style={{ width: '100%' }}
@@ -317,6 +317,15 @@ export default function OrdersPage() {
                   <Input prefix={<SearchOutlined />} />
                 </AutoComplete>
               </Form.Item>
+
+              {/* Заголовки колонок */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 4, paddingRight: 2 }}>
+                <Typography.Text type="secondary" style={{ flex: 1, fontSize: 11 }}>Наименование</Typography.Text>
+                <Typography.Text type="secondary" style={{ width: 88, fontSize: 11, flexShrink: 0 }}>Артикул</Typography.Text>
+                <Typography.Text type="secondary" style={{ width: 70, fontSize: 11, flexShrink: 0 }}>Кол-во</Typography.Text>
+                <Typography.Text type="secondary" style={{ width: 85, fontSize: 11, textAlign: 'right', flexShrink: 0 }}>Сумма</Typography.Text>
+                <div style={{ width: 24, flexShrink: 0 }} />
+              </div>
 
               {/* Скроллируемый список товаров */}
               <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: 2 }}>
@@ -328,9 +337,12 @@ export default function OrdersPage() {
                 {cartItems.map((item, idx) => (
                   <div key={item.product_id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
                     <Typography.Text style={{ flex: 1, fontSize: 13 }} ellipsis={{ tooltip: item.name }}>{item.name}</Typography.Text>
+                    <Typography.Text style={{ width: 88, fontSize: 12, color: '#8c8c8c', flexShrink: 0 }} ellipsis={{ tooltip: item.article ?? '—' }}>
+                      {item.article || '—'}
+                    </Typography.Text>
                     <InputNumber min={1} value={item.quantity} size="small" style={{ width: 70, flexShrink: 0 }}
                       onChange={(v) => setCartItems((c) => c.map((i, j) => j === idx ? { ...i, quantity: v ?? 1 } : i))} />
-                    <Typography.Text style={{ width: 80, textAlign: 'right', fontSize: 13, flexShrink: 0 }}>
+                    <Typography.Text style={{ width: 85, textAlign: 'right', fontSize: 13, flexShrink: 0 }}>
                       {(item.quantity * item.price).toFixed(2)} ₽
                     </Typography.Text>
                     <Button size="small" danger onClick={() => setCartItems((c) => c.filter((_, j) => j !== idx))}>✕</Button>
@@ -425,7 +437,7 @@ export default function OrdersPage() {
         title={detailOrder ? `Заказ №${detailOrder.customer_order_id}` : ''}
         open={!!detailOrder}
         onClose={() => setDetailOrder(null)}
-        width={500}
+        width={600}
         extra={
           detailOrder && !isFinished(detailOrder) && (
             <Button type="primary" icon={<ShoppingCartOutlined />} onClick={openCheckout}>
@@ -522,11 +534,11 @@ export default function OrdersPage() {
               size="small"
               pagination={false}
               columns={[
-                { title: 'Товар', dataIndex: ['product', 'name'], key: 'name', ellipsis: true },
-                { title: 'Артикул', key: 'article', width: 90, render: (_: unknown, i) => i.product.article || '—' },
-                { title: 'Кол', dataIndex: 'quantity', key: 'qty', width: 50 },
-                { title: 'Цена', dataIndex: 'price', key: 'price', width: 85, render: fmt },
-                { title: 'Сумма', dataIndex: 'line_amount', key: 'line', width: 85, render: fmt },
+                { title: 'Товар', dataIndex: ['product', 'name'], key: 'name', ellipsis: true, minWidth: 160 },
+                { title: 'Артикул', key: 'article', width: 80, render: (_: unknown, i) => i.product.article || '—' },
+                { title: 'Кол', dataIndex: 'quantity', key: 'qty', width: 45 },
+                { title: 'Цена', dataIndex: 'price', key: 'price', width: 80, render: fmt },
+                { title: 'Сумма', dataIndex: 'line_amount', key: 'line', width: 80, render: fmt },
               ]}
             />
           </>

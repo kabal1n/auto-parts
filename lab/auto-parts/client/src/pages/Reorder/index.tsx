@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   Table, Button, Typography, Tag, Modal, InputNumber,
-  Input, AutoComplete, Popconfirm, Select, Space, message,
+  Input, AutoComplete, Popconfirm, Select, Space, message, Drawer, Descriptions,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   PlusOutlined, CheckOutlined, DeleteOutlined,
-  SearchOutlined, MinusCircleOutlined,
+  SearchOutlined, MinusCircleOutlined, EyeOutlined,
 } from '@ant-design/icons';
 import { reorderApi, productsApi } from '../../api';
 import { useAuthStore } from '../../store/auth';
@@ -52,7 +52,9 @@ export default function ReorderPage() {
   const [productOptions, setProductOptions] = useState<Record<number, ProductOption[]>>({});
   const [filterStatus, setFilterStatus] = useState<string | undefined>('ACTIVE');
   const [nextKey, setNextKey] = useState(1);
-  const [expandedKeys, setExpandedKeys] = useState<number[]>([]);
+
+  const [selectedRequest, setSelectedRequest] = useState<ReorderRequest | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -116,6 +118,26 @@ export default function ReorderPage() {
     } catch { message.error('Ошибка создания заявки'); }
   };
 
+  const handleProcessed = async () => {
+    if (!selectedRequest) return;
+    try {
+      await reorderApi.setStatus(selectedRequest.reorder_request_id, 'PROCESSED');
+      message.success('Заявка отмечена исполненной');
+      setDrawerOpen(false);
+      load();
+    } catch { message.error('Ошибка обновления статуса'); }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedRequest) return;
+    try {
+      await reorderApi.remove(selectedRequest.reorder_request_id);
+      message.success('Заявка удалена');
+      setDrawerOpen(false);
+      load();
+    } catch { message.error('Ошибка удаления заявки'); }
+  };
+
   const admin = isAdmin();
 
   const columns: ColumnsType<ReorderRequest> = [
@@ -141,23 +163,20 @@ export default function ReorderPage() {
         </Tag>
       ),
     },
-    ...(admin ? [{
-      title: '', key: 'actions', width: 100,
-      render: (_: unknown, r: ReorderRequest) => r.status === 'ACTIVE' ? (
-        <Space.Compact size="small">
-          <Button icon={<CheckOutlined />} title="Отметить исполненной"
-            onClick={async () => { await reorderApi.setStatus(r.reorder_request_id, 'PROCESSED'); load(); }} />
-          <Popconfirm title="Удалить заявку?" onConfirm={async () => { await reorderApi.remove(r.reorder_request_id); load(); }}>
-            <Button icon={<DeleteOutlined />} danger />
-          </Popconfirm>
-        </Space.Compact>
-      ) : null,
-    }] as ColumnsType<ReorderRequest> : []),
+    {
+      title: '', key: 'view', width: 48,
+      render: (_: unknown, r: ReorderRequest) => (
+        <Button
+          size="small" icon={<EyeOutlined />}
+          onClick={(e) => { e.stopPropagation(); setSelectedRequest(r); setDrawerOpen(true); }}
+        />
+      ),
+    },
   ];
 
   const itemColumns: ColumnsType<ReorderItem> = [
     { title: 'Товар', dataIndex: ['product', 'name'], key: 'name', ellipsis: true },
-    { title: 'Артикул', dataIndex: ['product', 'article'], key: 'article', width: 130 },
+    { title: 'Артикул', dataIndex: ['product', 'article'], key: 'article', width: 130, render: (v: string | null) => v || '—' },
     { title: 'Количество', dataIndex: 'required_quantity', key: 'qty', width: 120 },
   ];
 
@@ -182,33 +201,66 @@ export default function ReorderPage() {
         loading={loading}
         size="middle"
         onRow={(r: ReorderRequest) => ({
-          onClick: () => setExpandedKeys((prev) =>
-            prev.includes(r.reorder_request_id)
-              ? prev.filter((k) => k !== r.reorder_request_id)
-              : [...prev, r.reorder_request_id]
-          ),
+          onClick: () => { setSelectedRequest(r); setDrawerOpen(true); },
           style: { cursor: 'pointer' },
         })}
-        expandable={{
-          expandedRowKeys: expandedKeys,
-          onExpand: (expanded, r: ReorderRequest) =>
-            setExpandedKeys((prev) =>
-              expanded ? [...prev, r.reorder_request_id] : prev.filter((k) => k !== r.reorder_request_id)
-            ),
-          showExpandColumn: false,
-          expandedRowRender: (r: ReorderRequest) => (
+      />
+
+      <Drawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title={selectedRequest ? `Заявка #${selectedRequest.reorder_request_id}` : ''}
+        width={520}
+        footer={admin && selectedRequest?.status === 'ACTIVE' ? (
+          <Space>
+            <Button icon={<CheckOutlined />} onClick={handleProcessed}>
+              Отметить исполненной
+            </Button>
+            <Popconfirm title="Удалить заявку?" okText="Удалить" cancelText="Отмена" onConfirm={handleDelete}>
+              <Button danger icon={<DeleteOutlined />}>Удалить</Button>
+            </Popconfirm>
+          </Space>
+        ) : null}
+      >
+        {selectedRequest && (
+          <>
+            <Descriptions column={1} size="small" style={{ marginBottom: 16 }}>
+              <Descriptions.Item label="Дата">
+                {dayjs(selectedRequest.created_at).format('DD.MM.YYYY HH:mm')}
+              </Descriptions.Item>
+              <Descriptions.Item label="Магазин">{selectedRequest.store.name}</Descriptions.Item>
+              <Descriptions.Item label="Создал">
+                {selectedRequest.user.last_name} {selectedRequest.user.first_name}
+              </Descriptions.Item>
+              <Descriptions.Item label="Статус">
+                <Tag color={selectedRequest.status === 'ACTIVE' ? 'orange' : 'green'}>
+                  {selectedRequest.status === 'ACTIVE' ? 'Активна' : 'Исполнена'}
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+
+            {selectedRequest.comment && (
+              <div style={{ marginBottom: 16 }}>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>Комментарий</Typography.Text>
+                <div style={{ marginTop: 4, padding: '8px 12px', background: '#fafafa', borderRadius: 6, border: '1px solid #f0f0f0' }}>
+                  <Typography.Text>{selectedRequest.comment}</Typography.Text>
+                </div>
+              </div>
+            )}
+
+            <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+              Позиции ({selectedRequest.items.length})
+            </Typography.Text>
             <Table
-              dataSource={r.items}
+              dataSource={selectedRequest.items}
               columns={itemColumns}
               rowKey="item_id"
               size="small"
               pagination={false}
-              style={{ margin: '0 48px 8px' }}
             />
-          ),
-          rowExpandable: (r: ReorderRequest) => r.items.length > 0,
-        }}
-      />
+          </>
+        )}
+      </Drawer>
 
       <Modal
         open={createOpen}
