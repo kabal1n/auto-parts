@@ -234,12 +234,13 @@ model CustomerOrder {
   order_status_id   Int
   car_id            Int?
 
-  customer Customer            @relation(fields: [client_id], references: [client_id])
-  user     User                @relation(fields: [user_id], references: [user_id])
-  store    Store               @relation(fields: [store_id], references: [store_id])
-  status   CustomerOrderStatus @relation(fields: [order_status_id], references: [order_status_id])
-  car      Car?                @relation(fields: [car_id], references: [car_id])
-  items    CustomerOrderItem[]
+  customer         Customer            @relation(fields: [client_id], references: [client_id])
+  user             User                @relation(fields: [user_id], references: [user_id])
+  store            Store               @relation(fields: [store_id], references: [store_id])
+  status           CustomerOrderStatus @relation(fields: [order_status_id], references: [order_status_id])
+  car              Car?                @relation(fields: [car_id], references: [car_id])
+  items            CustomerOrderItem[]
+  reorder_requests ReorderRequest[]
 }
 
 model CustomerOrderItem {
@@ -312,10 +313,12 @@ model ReorderRequest {
   status             ReorderStatus @default(ACTIVE)
   store_id           Int
   user_id            Int
+  customer_order_id  Int?
 
-  store Store         @relation(fields: [store_id], references: [store_id])
-  user  User          @relation(fields: [user_id], references: [user_id])
-  items ReorderItem[]
+  store          Store          @relation(fields: [store_id], references: [store_id])
+  user           User           @relation(fields: [user_id], references: [user_id])
+  customer_order CustomerOrder? @relation(fields: [customer_order_id], references: [customer_order_id])
+  items          ReorderItem[]
 }
 
 model ReorderItem {

@@ -72,10 +72,11 @@ router.post('/', async (req: Request, res: Response) => {
   const appliedDiscount = discount_percent !== undefined ? Number(discount_percent) : Number(customer.personal_discount_percent);
   const prepayment = Number(prepayment_amount) || 0;
 
-  const subtotal_amount = items.reduce((s, i) => s + i.quantity * i.price, 0);
-  const discount_amount = subtotal_amount * (appliedDiscount / 100);
-  const total_amount = subtotal_amount - discount_amount;
-  const amount_due = Math.max(0, total_amount - prepayment);
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const subtotal_amount = round2(items.reduce((s, i) => s + i.quantity * i.price, 0));
+  const discount_amount = round2(subtotal_amount * (appliedDiscount / 100));
+  const total_amount = round2(subtotal_amount - discount_amount);
+  const amount_due = round2(Math.max(0, total_amount - prepayment));
 
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.customerOrder.create({
@@ -105,27 +106,41 @@ router.post('/', async (req: Request, res: Response) => {
       include: { items: true, customer: true, status: true },
     });
 
+    const reorderItems: Array<{ product_id: number; required_quantity: number }> = [];
+
     for (const item of items) {
-      await tx.stockByStore.upsert({
+      const stock = await tx.stockByStore.findUnique({
         where: { store_id_product_id: { store_id: Number(store_id), product_id: item.product_id } },
-        update: { reserved_quantity: { increment: item.quantity } },
-        create: { store_id: Number(store_id), product_id: item.product_id, quantity: 0, reserved_quantity: item.quantity },
       });
+      const available = Math.max(0, (stock?.quantity ?? 0) - (stock?.reserved_quantity ?? 0));
+      const toReserve = Math.min(item.quantity, available);
+      const deficit = item.quantity - toReserve;
+
+      if (toReserve > 0 && stock) {
+        await tx.stockByStore.update({
+          where: { stock_id: stock.stock_id },
+          data: { reserved_quantity: { increment: toReserve } },
+        });
+      }
+      if (deficit > 0) {
+        reorderItems.push({ product_id: item.product_id, required_quantity: deficit });
+      }
     }
 
-    await tx.reorderRequest.create({
-      data: {
-        store_id: Number(store_id),
-        user_id: req.user!.user_id,
-        comment: [
-          `Заказ клиента #${created.customer_order_id} — ${created.customer.last_name} ${created.customer.first_name}, ${created.customer.phone}`,
-          notes || null,
-        ].filter(Boolean).join(' — ') || null,
-        items: {
-          create: items.map((i) => ({ product_id: i.product_id, required_quantity: i.quantity })),
+    if (reorderItems.length > 0) {
+      await tx.reorderRequest.create({
+        data: {
+          store_id: Number(store_id),
+          user_id: req.user!.user_id,
+          customer_order_id: created.customer_order_id,
+          comment: [
+            `Заказ клиента #${created.customer_order_id} — ${created.customer.last_name} ${created.customer.first_name}, ${created.customer.phone}`,
+            notes || null,
+          ].filter(Boolean).join(' — ') || null,
+          items: { create: reorderItems },
         },
-      },
-    });
+      });
+    }
 
     return created;
   });
@@ -186,6 +201,20 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
             data: { reserved_quantity: { decrement: safeDecrement } },
           });
         }
+      }
+
+      const activeReorders = await tx.reorderRequest.findMany({
+        where: { customer_order_id: id, status: 'ACTIVE' },
+        select: { reorder_request_id: true, comment: true },
+      });
+      for (const r of activeReorders) {
+        await tx.reorderRequest.update({
+          where: { reorder_request_id: r.reorder_request_id },
+          data: {
+            status: 'PROCESSED',
+            comment: [r.comment, `Отменён заказ #${id}`].filter(Boolean).join(' — '),
+          },
+        });
       }
     }
 

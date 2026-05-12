@@ -5,12 +5,14 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EyeOutlined, SearchOutlined, EditOutlined, ShoppingCartOutlined } from '@ant-design/icons';
-import { ordersApi, customersApi, productsApi } from '../../api';
+import { ordersApi, customersApi, productsApi, stockApi } from '../../api';
 import { formatPhone } from '../../utils/phone';
 import { useActiveStore } from '../../store/activeStore';
 import StoreGuard from '../../components/StoreGuard';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
+
+interface StockInfo { quantity: number; reserved: number; available: number }
 
 const ISSUED_STATUS_ID = 4;
 const CANCELLED_STATUS_ID = 5;
@@ -60,6 +62,7 @@ export default function OrdersPage() {
   const [selectedDiscount, setSelectedDiscount] = useState(0);
   const [customerCars, setCustomerCars] = useState<Array<{ car_id: number; car_brand: string; car_model: string; car_year: number | null }>>([]);
   const [notesValue, setNotesValue] = useState('');
+  const [stockMap, setStockMap] = useState<Record<number, StockInfo>>({});
 
   // Detail drawer
   const [detailOrder, setDetailOrder] = useState<OrderDetail | null>(null);
@@ -91,6 +94,15 @@ export default function OrdersPage() {
   };
 
   useEffect(() => { load(); }, [activeStoreId, statusFilter]);
+
+  useEffect(() => {
+    if (!activeStoreId) return;
+    stockApi.list({ store_id: activeStoreId }).then((res) => {
+      const map: Record<number, StockInfo> = {};
+      for (const s of res.data) map[s.product_id] = { quantity: s.quantity, reserved: s.reserved_quantity, available: s.available_quantity };
+      setStockMap(map);
+    }).catch(() => {});
+  }, [activeStoreId]);
 
   const searchProducts = async (val: string) => {
     if (!val) return;
@@ -334,20 +346,33 @@ export default function OrdersPage() {
                     Добавьте товары через поиск
                   </Typography.Text>
                 )}
-                {cartItems.map((item, idx) => (
-                  <div key={item.product_id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                    <Typography.Text style={{ flex: 1, fontSize: 13 }} ellipsis={{ tooltip: item.name }}>{item.name}</Typography.Text>
-                    <Typography.Text style={{ width: 88, fontSize: 12, color: '#8c8c8c', flexShrink: 0 }} ellipsis={{ tooltip: item.article ?? '—' }}>
-                      {item.article || '—'}
-                    </Typography.Text>
-                    <InputNumber min={1} value={item.quantity} size="small" style={{ width: 70, flexShrink: 0 }}
-                      onChange={(v) => setCartItems((c) => c.map((i, j) => j === idx ? { ...i, quantity: v ?? 1 } : i))} />
-                    <Typography.Text style={{ width: 85, textAlign: 'right', fontSize: 13, flexShrink: 0 }}>
-                      {(item.quantity * item.price).toFixed(2)} ₽
-                    </Typography.Text>
-                    <Button size="small" danger onClick={() => setCartItems((c) => c.filter((_, j) => j !== idx))}>✕</Button>
-                  </div>
-                ))}
+                {cartItems.map((item, idx) => {
+                  const avail = stockMap[item.product_id]?.available ?? 0;
+                  const deficit = Math.max(0, item.quantity - avail);
+                  return (
+                    <div key={item.product_id}>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: deficit > 0 ? 2 : 8, alignItems: 'center' }}>
+                        <Typography.Text style={{ flex: 1, fontSize: 13 }} ellipsis={{ tooltip: item.name }}>{item.name}</Typography.Text>
+                        <Typography.Text style={{ width: 88, fontSize: 12, color: '#8c8c8c', flexShrink: 0 }} ellipsis={{ tooltip: item.article ?? '—' }}>
+                          {item.article || '—'}
+                        </Typography.Text>
+                        <InputNumber min={1} value={item.quantity} size="small" style={{ width: 70, flexShrink: 0 }}
+                          onChange={(v) => setCartItems((c) => c.map((i, j) => j === idx ? { ...i, quantity: v ?? 1 } : i))} />
+                        <Typography.Text style={{ width: 85, textAlign: 'right', fontSize: 13, flexShrink: 0 }}>
+                          {(item.quantity * item.price).toFixed(2)} ₽
+                        </Typography.Text>
+                        <Button size="small" danger onClick={() => setCartItems((c) => c.filter((_, j) => j !== idx))}>✕</Button>
+                      </div>
+                      {deficit > 0 && (
+                        <div style={{ fontSize: 12, color: '#fa8c16', marginBottom: 6, paddingLeft: 2 }}>
+                          {avail === 0
+                            ? `Нет в наличии · Будет заказано у поставщика: ${item.quantity} шт`
+                            : `В наличии: ${avail} шт · Будет заказано у поставщика: ${deficit} шт`}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Блок итогов — всегда внизу */}

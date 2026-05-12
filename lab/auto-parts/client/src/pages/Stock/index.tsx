@@ -11,6 +11,8 @@ import StoreGuard from '../../components/StoreGuard';
 interface StockRow {
   stock_id: number;
   quantity: number;
+  reserved_quantity: number;
+  available_quantity: number;
   minimum_quantity: number;
   product: { name: string; article: string | null; unit: string };
   store: { name: string };
@@ -74,11 +76,10 @@ export default function StockPage() {
     { title: 'Артикул', dataIndex: ['product', 'article'], key: 'article', width: 120 },
     { title: 'Ед.', dataIndex: ['product', 'unit'], key: 'unit', width: 60 },
     {
-      title: 'Остаток', key: 'quantity', width: 120,
+      title: 'Остаток', key: 'quantity', width: 110,
       render: (_: unknown, row: StockRow) => {
         const val = edits[row.stock_id]?.quantity ?? row.quantity;
-        const low = val <= row.minimum_quantity;
-        if (!admin) return <Tag color={low ? 'red' : 'green'}>{val}</Tag>;
+        if (!admin) return val;
         return (
           <InputNumber value={val} min={0} size="small" style={{ width: 80 }}
             onChange={(v) => setEdits((e) => ({ ...e, [row.stock_id]: { ...e[row.stock_id], quantity: v ?? 0 } }))} />
@@ -86,7 +87,23 @@ export default function StockPage() {
       },
     },
     {
-      title: 'Минимум', key: 'minimum_quantity', width: 120,
+      title: 'Резерв', key: 'reserved', width: 100,
+      render: (_: unknown, row: StockRow) => (
+        <span style={{ color: row.reserved_quantity === 0 ? '#bfbfbf' : undefined }}>
+          {row.reserved_quantity}
+        </span>
+      ),
+    },
+    {
+      title: 'Доступно', key: 'available', width: 110,
+      render: (_: unknown, row: StockRow) => {
+        const qty = edits[row.stock_id]?.quantity ?? row.quantity;
+        const val = admin ? Math.max(0, qty - row.reserved_quantity) : row.available_quantity;
+        return <span style={{ fontWeight: 600, color: val <= 0 ? '#ff4d4f' : undefined }}>{val}</span>;
+      },
+    },
+    {
+      title: 'Минимум', key: 'minimum_quantity', width: 110,
       render: (_: unknown, row: StockRow) => {
         const val = edits[row.stock_id]?.minimum_quantity ?? row.minimum_quantity;
         if (!admin) return val;
@@ -100,8 +117,9 @@ export default function StockPage() {
       title: 'Статус', key: 'status', width: 120,
       render: (_: unknown, row: StockRow) => {
         const qty = edits[row.stock_id]?.quantity ?? row.quantity;
+        const available = Math.max(0, qty - row.reserved_quantity);
         const min = edits[row.stock_id]?.minimum_quantity ?? row.minimum_quantity;
-        return qty <= min ? <Tag color="red">Мало</Tag> : <Tag color="green">В норме</Tag>;
+        return available <= min ? <Tag color="red">Мало</Tag> : <Tag color="green">В норме</Tag>;
       },
     },
     ...(admin ? [{

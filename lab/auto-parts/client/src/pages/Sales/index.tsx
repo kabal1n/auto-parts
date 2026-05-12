@@ -14,12 +14,13 @@ import StoreGuard from '../../components/StoreGuard';
 interface Product { product_id: number; name: string; price: number; unit: string; barcode: string | null; article: string | null }
 interface CartItem extends Product { quantity: number }
 interface Customer { client_id: number; last_name: string; first_name: string; phone: string; personal_discount_percent: number }
+interface StockInfo { quantity: number; reserved: number; available: number }
 
 export default function SalesPage() {
   const { activeStoreId } = useActiveStore();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [productSearch, setProductSearch] = useState('');
-  const [productOptions, setProductOptions] = useState<{ value: string; label: string; product: Product }[]>([]);
+  const [productOptions, setProductOptions] = useState<{ value: string; label: React.ReactNode; product: Product }[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerOptions, setCustomerOptions] = useState<{ value: string; label: string; customer: Customer }[]>([]);
@@ -29,14 +30,18 @@ export default function SalesPage() {
   const [mixedCash, setMixedCash] = useState(0);
   const [mixedCard, setMixedCard] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [stockMap, setStockMap] = useState<Record<number, number>>({});
+  const [stockMap, setStockMap] = useState<Record<number, StockInfo>>({});
 
   const loadStock = useCallback(async () => {
     if (!activeStoreId) return;
     try {
       const res = await stockApi.list({ store_id: activeStoreId });
-      const map: Record<number, number> = {};
-      for (const s of res.data) map[s.product_id] = s.quantity;
+      const map: Record<number, StockInfo> = {};
+      for (const s of res.data) map[s.product_id] = {
+        quantity: s.quantity,
+        reserved: s.reserved_quantity,
+        available: s.available_quantity,
+      };
       setStockMap(map);
     } catch { /* stock validation still enforced on backend */ }
   }, [activeStoreId]);
@@ -44,17 +49,17 @@ export default function SalesPage() {
   useEffect(() => { loadStock(); }, [loadStock]);
 
   const addToCart = (product: Product) => {
-    const stockQty = stockMap[product.product_id];
+    const available = stockMap[product.product_id]?.available;
     setCart((prev) => {
       const existing = prev.find((i) => i.product_id === product.product_id);
-      if (stockQty !== undefined) {
+      if (available !== undefined) {
         if (existing) {
-          if (existing.quantity >= stockQty) {
-            message.warning(`Максимальное количество (${stockQty}) уже добавлено в корзину`);
+          if (existing.quantity >= available) {
+            message.warning(`Максимальное доступное количество (${available}) уже добавлено в корзину`);
             return prev;
           }
-        } else if (stockQty === 0) {
-          message.warning(`Товар "${product.name}" отсутствует на складе`);
+        } else if (available === 0) {
+          message.warning('Товар недоступен — весь остаток зарезервирован под заказы');
           return prev;
         }
       }
@@ -75,18 +80,20 @@ export default function SalesPage() {
     if (!val) { setProductOptions([]); return; }
     const res = await productsApi.list({ search: val });
     setProductOptions(
-      res.data.map((p: Product) => ({
-        value: String(p.product_id),
-        label: `${p.name} — ${Number(p.price).toFixed(2)} ₽`,
-        product: p,
-      })),
+      res.data.map((p: Product) => {
+        const available = stockMap[p.product_id]?.available ?? 0;
+        const label = available > 0
+          ? <span>{p.name} — {Number(p.price).toFixed(2)} ₽ <span style={{ color: '#8c8c8c' }}>— осталось: {available} шт</span></span>
+          : <span>{p.name} — {Number(p.price).toFixed(2)} ₽ <span style={{ color: '#ff4d4f' }}>— нет в наличии</span></span>;
+        return { value: String(p.product_id), label, product: p };
+      }),
     );
   };
 
   const updateQty = (id: number, qty: number) => {
     if (qty <= 0) { setCart((c) => c.filter((i) => i.product_id !== id)); return; }
-    const stockQty = stockMap[id];
-    const clamped = (stockQty !== undefined && qty > stockQty) ? stockQty : qty;
+    const available = stockMap[id]?.available;
+    const clamped = (available !== undefined && qty > available) ? available : qty;
     setCart((c) => c.map((i) => i.product_id === id ? { ...i, quantity: clamped } : i));
   };
 
@@ -176,7 +183,7 @@ export default function SalesPage() {
     {
       title: 'Кол-во', key: 'qty', width: 110,
       render: (_: unknown, item: CartItem) => (
-        <InputNumber min={0} max={stockMap[item.product_id]} value={item.quantity} size="small" style={{ width: 80 }}
+        <InputNumber min={0} max={stockMap[item.product_id]?.available} value={item.quantity} size="small" style={{ width: 80 }}
           onChange={(v) => updateQty(item.product_id, v ?? 0)} />
       ),
     },
