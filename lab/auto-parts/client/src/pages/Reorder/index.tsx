@@ -6,9 +6,9 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import {
   PlusOutlined, CheckOutlined, DeleteOutlined,
-  SearchOutlined, MinusCircleOutlined, EyeOutlined,
+  SearchOutlined, MinusCircleOutlined, EyeOutlined, ThunderboltOutlined,
 } from '@ant-design/icons';
-import { reorderApi, productsApi } from '../../api';
+import { reorderApi, productsApi, stockApi } from '../../api';
 import { useAuthStore } from '../../store/auth';
 import { useActiveStore } from '../../store/activeStore';
 import StoreGuard from '../../components/StoreGuard';
@@ -37,7 +37,14 @@ interface FormItem {
   required_quantity: number;
 }
 
-type ProductOption = { value: string; label: string; product_id: number };
+interface StockLowRow {
+  product_id: number;
+  available_quantity: number;
+  minimum_quantity: number;
+  product: { name: string; article: string | null; unit: string | null };
+}
+
+type ProductOption = { value: string; label: React.ReactNode; product_id: number };
 
 export default function ReorderPage() {
   const { isAdmin } = useAuthStore();
@@ -52,6 +59,7 @@ export default function ReorderPage() {
   const [productOptions, setProductOptions] = useState<Record<number, ProductOption[]>>({});
   const [filterStatus, setFilterStatus] = useState<string | undefined>('ACTIVE');
   const [nextKey, setNextKey] = useState(1);
+  const [stockMap, setStockMap] = useState<Record<number, { available: number }>>({});
 
   const [selectedRequest, setSelectedRequest] = useState<ReorderRequest | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -69,16 +77,33 @@ export default function ReorderPage() {
 
   useEffect(() => { load(); }, [filterStatus, activeStoreId]);
 
+  const loadStockMap = async () => {
+    if (!activeStoreId) return;
+    try {
+      const res = await stockApi.list({ store_id: activeStoreId });
+      const map: Record<number, { available: number }> = {};
+      for (const s of res.data) map[s.product_id] = { available: s.available_quantity };
+      setStockMap(map);
+    } catch { /* stock info is optional */ }
+  };
+
   const searchProducts = async (val: string, key: number) => {
     if (!val || val.length < 2) { setProductOptions((p) => ({ ...p, [key]: [] })); return; }
     const res = await productsApi.list({ search: val });
     setProductOptions((p) => ({
       ...p,
-      [key]: res.data.map((prod: { product_id: number; name: string; article: string | null }) => ({
-        value: prod.name,
-        label: prod.article ? `${prod.name} (${prod.article})` : prod.name,
-        product_id: prod.product_id,
-      })),
+      [key]: res.data.map((prod: { product_id: number; name: string; article: string | null }) => {
+        const avail = stockMap[prod.product_id]?.available ?? null;
+        const availLabel = avail === null ? null
+          : avail > 0
+            ? <span style={{ color: '#8c8c8c' }}> — доступно: {avail} шт</span>
+            : <span style={{ color: '#ff4d4f' }}> — нет в наличии</span>;
+        return {
+          value: prod.name,
+          label: <span>{prod.article ? `${prod.name} (${prod.article})` : prod.name}{availLabel}</span>,
+          product_id: prod.product_id,
+        };
+      }),
     }));
   };
 
@@ -98,6 +123,39 @@ export default function ReorderPage() {
     setNextKey(1);
     setProductOptions({});
     setCreateOpen(true);
+    loadStockMap();
+  };
+
+  const fillFromDeficit = async () => {
+    if (!activeStoreId) return;
+    try {
+      const res = await stockApi.low({ store_id: activeStoreId });
+      const deficit = (res.data as StockLowRow[]).filter((s) => s.minimum_quantity > 0);
+      if (!deficit.length) { message.info('Дефицитных позиций нет'); return; }
+
+      const doFill = () => {
+        const items: FormItem[] = deficit.map((s, idx) => ({
+          key: idx,
+          product_id: s.product_id,
+          product_name: s.product.name,
+          required_quantity: Math.max(1, s.minimum_quantity - s.available_quantity),
+        }));
+        setFormItems(items);
+        setNextKey(items.length);
+      };
+
+      const hasData = formItems.some((i) => i.product_id || i.product_name);
+      if (hasData) {
+        Modal.confirm({
+          title: 'Заменить текущие позиции?',
+          content: `Будет добавлено ${deficit.length} дефицитных позиций.`,
+          okText: 'Заменить', cancelText: 'Отмена',
+          onOk: doFill,
+        });
+      } else {
+        doFill();
+      }
+    } catch { message.error('Ошибка загрузки дефицита'); }
   };
 
   const hasUnconfirmed = formItems.some((i) => i.product_name && !i.product_id);
@@ -265,11 +323,14 @@ export default function ReorderPage() {
       <Modal
         open={createOpen}
         title="Новая заявка на закупку"
-        onOk={create}
         onCancel={() => setCreateOpen(false)}
-        okText="Создать"
-        cancelText="Отмена"
-        okButtonProps={{ disabled: hasUnconfirmed }}
+        footer={[
+          <Button key="deficit" icon={<ThunderboltOutlined />} onClick={fillFromDeficit}>
+            Из дефицита
+          </Button>,
+          <Button key="cancel" onClick={() => setCreateOpen(false)}>Отмена</Button>,
+          <Button key="ok" type="primary" disabled={hasUnconfirmed} onClick={create}>Создать</Button>,
+        ]}
         width={620}
       >
         <div style={{ marginTop: 16 }}>
