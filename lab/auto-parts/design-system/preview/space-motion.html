@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="_base.css">
+<style>
+@keyframes runfast { 0%,100% { transform: translateX(0) } 50% { transform: translateX(160px) } }
+@keyframes runbase { 0%,100% { transform: translateX(0) } 50% { transform: translateX(160px) } }
+@keyframes runslow { 0%,100% { transform: translateX(0) } 50% { transform: translateX(160px) } }
+.b { width: 14px; height: 14px; background: #2D6CDF; border-radius: 4px; }
+.t-fast { animation: runfast 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
+.t-base { animation: runbase 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; animation-delay: .15s; }
+.t-slow { animation: runslow 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite; animation-delay: .3s; }
+</style></head>
+<body>
+<div class="card">
+  <div class="label" style="margin-bottom:6px">Motion · durations × easings</div>
+  <div style="display:grid;grid-template-columns:120px 1fr;gap:8px 18px;align-items:center">
+    <div><span style="font-size:13px;font-weight:600;color:var(--color-fg-1)">120 ms</span><div class="mono" style="color:var(--color-fg-3)">fast · feedback</div></div>
+    <div style="background:#F8FAFC;border:1px solid var(--color-border);border-radius:6px;height:22px;display:flex;align-items:center;padding:0 4px;overflow:hidden"><div class="b t-fast"></div></div>
+    <div><span style="font-size:13px;font-weight:600;color:var(--color-fg-1)">180 ms</span><div class="mono" style="color:var(--color-fg-3)">base · default</div></div>
+    <div style="background:#F8FAFC;border:1px solid var(--color-border);border-radius:6px;height:22px;display:flex;align-items:center;padding:0 4px;overflow:hidden"><div class="b t-base"></div></div>
+    <div><span style="font-size:13px;font-weight:600;color:var(--color-fg-1)">240 ms</span><div class="mono" style="color:var(--color-fg-3)">slow · modal</div></div>
+    <div style="background:#F8FAFC;border:1px solid var(--color-border);border-radius:6px;height:22px;display:flex;align-items:center;padding:0 4px;overflow:hidden"><div class="b t-slow"></div></div>
+  </div>
+  <div style="margin-top:6px;font-size:12px;color:var(--color-fg-3)">
+    Easing out: <span class="mono">cubic-bezier(0.2, 0.8, 0.2, 1)</span> · Easing in-out: <span class="mono">cubic-bezier(0.4, 0, 0.2, 1)</span> · <b style="color:var(--color-fg-2)">No bounces.</b>
+  </div>
+</div>
+</body></html>

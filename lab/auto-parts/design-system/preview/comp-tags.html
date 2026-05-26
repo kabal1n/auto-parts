@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="_base.css">
+<style>
+.tag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 4px; font-size: 12px; font-weight: 500; line-height: 1.5; border: 1px solid; font-family: var(--font-sans); }
+.dot { width: 6px; height: 6px; border-radius: 50%; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.4; font-family: var(--font-sans); border: 1px solid }
+.lbl { font-size: 11px; font-weight: 500; color: var(--color-fg-3); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 8px; display:block }
+</style></head>
+<body>
+<div class="card">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 28px">
+    <div>
+      <span class="lbl">Tags (status &amp; meta)</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="tag" style="background:#ECFDF5;color:#15803D;border-color:#BBF7D0">В норме</span>
+        <span class="tag" style="background:#FEF2F2;color:#B91C1C;border-color:#FECACA">Мало</span>
+        <span class="tag" style="background:#FFFBEB;color:#B45309;border-color:#FED7AA">На проверке</span>
+        <span class="tag" style="background:#EAF1FE;color:#1B4BAD;border-color:#BCD3FA">Проведено</span>
+        <span class="tag" style="background:#F1F5F9;color:#475569;border-color:#E1E6EF">Черновик</span>
+        <span class="tag" style="background:#FEF2F2;color:#B91C1C;border-color:#FECACA">Отменено</span>
+        <span class="tag" style="background:#F1F5F9;color:#334155;border-color:#E1E6EF">Тормозная&nbsp;система</span>
+        <span class="tag" style="background:#F1F5F9;color:#334155;border-color:#E1E6EF">MANN</span>
+      </div>
+    </div>
+    <div>
+      <span class="lbl">Pills (with dot)</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="pill" style="background:#ECFDF5;color:#15803D;border-color:#BBF7D0"><span class="dot" style="background:#16A34A"></span>Активен</span>
+        <span class="pill" style="background:#FEF2F2;color:#B91C1C;border-color:#FECACA"><span class="dot" style="background:#DC2626"></span>Заблокирован</span>
+        <span class="pill" style="background:#FFFBEB;color:#B45309;border-color:#FED7AA"><span class="dot" style="background:#D97706"></span>Резерв</span>
+      </div>
+      <span class="lbl" style="margin-top:14px">Customer status</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="tag" style="background:#F1F5F9;color:#475569;border-color:#E1E6EF">Обычный · 0%</span>
+        <span class="tag" style="background:#EAF1FE;color:#1B4BAD;border-color:#BCD3FA">Постоянный · 5%</span>
+        <span class="tag" style="background:#ECFDF5;color:#15803D;border-color:#BBF7D0">VIP · 10%</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

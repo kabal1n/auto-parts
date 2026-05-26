@@ -1,0 +1,298 @@
+/* ============================================================
+   АвтоЗапчасти — Design Tokens
+   Foundations for a calm, technical ERP/CRM aesthetic.
+   ============================================================ */
+
+/* ---------- Fonts ---------- */
+/* Substitution note: the original app used Segoe UI (system font).
+   We upgrade to IBM Plex Sans for premium-corporate feel with strong
+   Cyrillic coverage, and JetBrains Mono for tabular/numeric content. */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ============================================================
+     COLOR — Neutrals (slate-based, calm, ERP-grade)
+     ============================================================ */
+  --color-bg-app:        #F4F6FA;   /* page background */
+  --color-bg-surface:    #FFFFFF;   /* cards, modals, sider, header */
+  --color-bg-subtle:     #F8FAFC;   /* hover rows, inset panels */
+  --color-bg-muted:      #EEF1F6;   /* keyboard-shortcut chips, code, secondary fills */
+  --color-bg-inverse:    #0F172A;   /* dark surface (tooltips, banners) */
+
+  --color-border-subtle: #EEF1F6;   /* hairline dividers inside cards */
+  --color-border:        #E1E6EF;   /* card edge, input border, table grid */
+  --color-border-strong: #C8D0DD;   /* hover input, focus-adjacent */
+
+  --color-fg-1:          #0F172A;   /* primary text, headings, numerals */
+  --color-fg-2:          #334155;   /* body text, table cell default */
+  --color-fg-3:          #64748B;   /* labels, secondary text */
+  --color-fg-4:          #94A3B8;   /* hint, placeholder, disabled */
+  --color-fg-inverse:    #FFFFFF;
+
+  /* ============================================================
+     COLOR — Brand (calm corporate blue)
+     ============================================================ */
+  --color-primary:       #2D6CDF;   /* primary actions, focus rings, active nav */
+  --color-primary-hover: #245CC6;
+  --color-primary-press: #1B4BAD;
+  --color-primary-bg:    #EAF1FE;   /* selected-row tint, primary subtle */
+  --color-primary-border:#BCD3FA;
+
+  /* ============================================================
+     COLOR — Semantic (status, feedback, business meaning)
+     ============================================================ */
+  --color-success:        #16A34A;
+  --color-success-bg:     #ECFDF5;
+  --color-success-border: #BBF7D0;
+
+  --color-danger:         #DC2626;
+  --color-danger-bg:      #FEF2F2;
+  --color-danger-border:  #FECACA;
+
+  --color-warning:        #D97706;
+  --color-warning-bg:     #FFFBEB;
+  --color-warning-border: #FED7AA;
+
+  --color-info:           #2D6CDF;
+  --color-info-bg:        #EAF1FE;
+  --color-info-border:    #BCD3FA;
+
+  --color-neutral-bg:     #F1F5F9;  /* default tag */
+  --color-neutral-border: #E1E6EF;
+
+  /* ============================================================
+     COLOR — Role accents (Администратор / Кассир)
+     ============================================================ */
+  --color-role-admin:     #2D6CDF;
+  --color-role-admin-bg:  #EAF1FE;
+  --color-role-cashier:   #0E9F6E;
+  --color-role-cashier-bg:#E6F7EF;
+
+  /* ============================================================
+     TYPOGRAPHY — Stacks
+     ============================================================ */
+  --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system,
+               'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Liberation Mono', monospace;
+  --font-display: var(--font-sans);
+
+  /* Type scale */
+  --fs-xs:   12px;   /* hint, meta, small tag */
+  --fs-sm:   13px;   /* table cell, secondary */
+  --fs-base: 14px;   /* default UI text */
+  --fs-md:   15px;   /* emphasized body */
+  --fs-lg:   16px;   /* nav, sub-heading */
+  --fs-xl:   18px;   /* card title */
+  --fs-2xl:  20px;   /* page section title (h5) */
+  --fs-3xl:  24px;   /* page title (h4) */
+  --fs-4xl:  30px;   /* statistic number */
+  --fs-5xl:  38px;   /* hero statistic */
+
+  --lh-tight:   1.2;
+  --lh-snug:    1.35;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  --ls-tight:  -0.011em;
+  --ls-normal: 0;
+  --ls-wide:    0.04em;   /* small all-caps labels */
+
+  /* ============================================================
+     SPACING — 4px base
+     ============================================================ */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ============================================================
+     RADIUS
+     ============================================================ */
+  --radius-xs:   4px;   /* tag, small chip */
+  --radius-sm:   6px;   /* button, input */
+  --radius-md:   8px;   /* card, modal body, table */
+  --radius-lg:  10px;   /* modal, login card */
+  --radius-xl:  14px;   /* hero panels */
+  --radius-pill: 999px;
+
+  /* ============================================================
+     ELEVATION — calm, layered
+     ============================================================ */
+  --shadow-xs:    0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm:    0 2px 8px rgba(15, 23, 42, 0.06);            /* card resting */
+  --shadow-md:    0 4px 16px rgba(15, 23, 42, 0.08);           /* card hover, dropdown */
+  --shadow-lg:    0 12px 32px rgba(15, 23, 42, 0.10);          /* modal */
+  --shadow-focus: 0 0 0 3px rgba(45, 108, 223, 0.18);          /* focus ring */
+
+  /* Inset (for inputs / pressed) */
+  --shadow-inset: inset 0 1px 0 rgba(15, 23, 42, 0.04);
+
+  /* ============================================================
+     LAYOUT
+     ============================================================ */
+  --layout-sider-w: 232px;
+  --layout-header-h: 56px;
+  --layout-content-pad: 24px;
+
+  /* ============================================================
+     MOTION — quick, calm, no bounces
+     ============================================================ */
+  --ease-out:      cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out:   cubic-bezier(0.4, 0.0, 0.2, 1);
+  --dur-fast:      120ms;
+  --dur-base:      180ms;
+  --dur-slow:      240ms;
+
+  /* ============================================================
+     Z-INDEX
+     ============================================================ */
+  --z-sticky:  100;
+  --z-header:  200;
+  --z-drawer:  900;
+  --z-modal:  1000;
+  --z-toast:  1100;
+}
+
+/* ============================================================
+   SEMANTIC TYPOGRAPHY — apply these directly to elements
+   ============================================================ */
+
+.t-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-4xl);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-fg-1);
+}
+
+.t-h1, h1.t {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-fg-1);
+  margin: 0;
+}
+
+.t-h2, h2.t {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-fg-1);
+  margin: 0;
+}
+
+.t-h3, h3.t {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  color: var(--color-fg-1);
+  margin: 0;
+}
+
+.t-h4, h4.t {
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  color: var(--color-fg-1);
+  margin: 0;
+}
+
+.t-body, p.t {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-normal);
+  color: var(--color-fg-2);
+  margin: 0;
+}
+
+.t-body-sm {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-normal);
+  color: var(--color-fg-2);
+}
+
+.t-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  color: var(--color-fg-3);
+}
+
+.t-overline {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.t-caption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-snug);
+  color: var(--color-fg-3);
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fg-2);
+}
+
+.t-numeric {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  font-weight: var(--fw-medium);
+  color: var(--color-fg-1);
+}
+
+.t-stat {
+  font-family: var(--font-display);
+  font-size: var(--fs-4xl);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-fg-1);
+}
+
+/* ============================================================
+   GLOBAL DEFAULTS
+   ============================================================ */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--color-fg-2);
+  background: var(--color-bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="_base.css">
+<style>
+.row { display:grid; grid-template-columns: 120px 1fr; gap:14px; padding: 8px 0; border-bottom: 1px solid var(--color-border-subtle) }
+.row:last-child { border-bottom: 0 }
+.row .ctx { font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--color-fg-3); padding-top:2px }
+.row .ex { color:var(--color-fg-1); font-size:14px }
+.row .ex .meta { color:var(--color-fg-3); font-size:12px; margin-top:2px }
+</style></head>
+<body>
+<div class="card">
+  <div class="row"><span class="ctx">Page title</span><span class="ex">Новая продажа<div class="meta">Sentence case. No greeting, no friendliness.</div></span></div>
+  <div class="row"><span class="ctx">Primary CTA</span><span class="ex">Оформить оплату · Провести продажу · Войти<div class="meta">Imperative verb. Two words max.</div></span></div>
+  <div class="row"><span class="ctx">Empty state</span><span class="ex">Корзина пуста · Продаж за сегодня нет<div class="meta">Factual. No apology, no advice.</div></span></div>
+  <div class="row"><span class="ctx">Hint</span><span class="ex">Вводите цифры — «+7» добавится автоматически<div class="meta">Russian guillemets «». Em-dash with spaces.</div></span></div>
+  <div class="row"><span class="ctx">Toast · success</span><span class="ex">Продажа оформлена · Остаток обновлён<div class="meta">Past participle. Three words max.</div></span></div>
+  <div class="row"><span class="ctx">Toast · error</span><span class="ex">Сумма наличных меньше суммы к оплате<div class="meta">Diagnose, don't apologise.</div></span></div>
+  <div class="row"><span class="ctx">Confirm</span><span class="ex">Удалить товар? — <b>Удалить</b> · Отмена<div class="meta">Destructive verb is the button label, not "OK".</div></span></div>
+  <div class="row"><span class="ctx">Status tag</span><span class="ex">Мало · В норме · Проведено · Черновик · На&nbsp;проверке<div class="meta">One or two words. Past participle for terminal states.</div></span></div>
+</div>
+</body></html>
