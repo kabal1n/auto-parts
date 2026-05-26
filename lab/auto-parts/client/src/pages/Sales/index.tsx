@@ -97,13 +97,9 @@ export default function SalesPage() {
     setCart((c) => c.map((i) => i.product_id === id ? { ...i, quantity: clamped } : i));
   };
 
-  const onPhoneChange = async (val: string) => {
-    const masked = maskPhone(val);
-    setCustomerSearch(masked);
-    const digits = val.replace(/\D/g, '').replace(/^[78]/, '');
-    if (digits.length < 3) { setCustomerOptions([]); return; }
+  const fetchCustomerOptions = async (search: string) => {
     try {
-      const res = await customersApi.list({ search: digits });
+      const res = await customersApi.list({ search });
       setCustomerOptions(
         res.data.map((c: Customer) => ({
           value: String(c.client_id),
@@ -112,6 +108,20 @@ export default function SalesPage() {
         })),
       );
     } catch { setCustomerOptions([]); }
+  };
+
+  const onCustomerSearchChange = (val: string) => {
+    const hasLetters = /[а-яёa-zA-Z]/i.test(val);
+    if (hasLetters) {
+      setCustomerSearch(val);
+      if (val.trim().length >= 2) fetchCustomerOptions(val.trim());
+      else setCustomerOptions([]);
+    } else {
+      setCustomerSearch(maskPhone(val));
+      const digits = val.replace(/\D/g, '').replace(/^[78]/, '');
+      if (digits.length >= 3) fetchCustomerOptions(digits);
+      else setCustomerOptions([]);
+    }
   };
 
   const onSelectCustomer = (_val: string, opt: { value: string; label: string; customer: Customer }) => {
@@ -227,14 +237,14 @@ export default function SalesPage() {
             <AutoComplete
               value={customerSearch}
               options={customerOptions}
-              onChange={onPhoneChange}
+              onChange={onCustomerSearchChange}
               onSelect={onSelectCustomer}
               style={{ width: '100%', marginTop: 8 }}
             >
-              <Input prefix={<UserOutlined />} placeholder="Начните вводить номер телефона..." maxLength={18} />
+              <Input prefix={<UserOutlined />} placeholder="Телефон или ФИО клиента..." maxLength={60} />
             </AutoComplete>
             <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 12 }}>
-              Вводите цифры — «+7» добавится автоматически
+              Телефон (+7...) или фамилия/имя
             </Typography.Text>
 
             {customer && (

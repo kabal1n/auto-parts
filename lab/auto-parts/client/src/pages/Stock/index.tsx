@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Table, Typography, Tag, InputNumber, Button, Input, message } from 'antd';
+import { Table, Typography, Tag, InputNumber, Button, Input, Tabs, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SaveOutlined, SearchOutlined } from '@ant-design/icons';
-import { stockApi, productsApi } from '../../api';
+import { stockApi, productsApi, storesApi } from '../../api';
 import { useAuthStore } from '../../store/auth';
 import { useActiveStore } from '../../store/activeStore';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
@@ -21,22 +21,30 @@ interface StockRow {
 export default function StockPage() {
   const { isAdmin } = useAuthStore();
   const { activeStoreId } = useActiveStore();
+  const [stores, setStores] = useState<{ store_id: number; name: string }[]>([]);
+  const [viewStoreId, setViewStoreId] = useState<number | null>(activeStoreId);
   const [rows, setRows] = useState<StockRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [edits, setEdits] = useState<Record<number, { quantity?: number; minimum_quantity?: number }>>({});
   const [saving, setSaving] = useState<Record<number, boolean>>({});
 
+  useEffect(() => {
+    storesApi.list().then((res) => setStores(res.data));
+  }, []);
+
+  useEffect(() => { setViewStoreId(activeStoreId); }, [activeStoreId]);
+
   const load = async () => {
     setLoading(true);
     try {
       const params: Record<string, string> = {};
-      if (activeStoreId) params.store_id = String(activeStoreId);
+      if (viewStoreId) params.store_id = String(viewStoreId);
       const res = await stockApi.list(params);
       setRows(res.data);
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, [activeStoreId]);
+  useEffect(() => { load(); }, [viewStoreId]);
 
   const saveRow = async (id: number) => {
     if (!edits[id]) return;
@@ -62,6 +70,7 @@ export default function StockPage() {
   });
 
   const admin = isAdmin();
+  const canEdit = admin && viewStoreId === activeStoreId;
 
   const filtered = search
     ? rows.filter((r) =>
@@ -71,7 +80,6 @@ export default function StockPage() {
     : rows;
 
   const columns: ColumnsType<StockRow> = [
-    { title: 'Магазин', dataIndex: ['store', 'name'], key: 'store', width: 160 },
     { title: 'Товар', dataIndex: ['product', 'name'], key: 'name', ellipsis: true },
     { title: 'Артикул', dataIndex: ['product', 'article'], key: 'article', width: 120 },
     { title: 'Ед.', dataIndex: ['product', 'unit'], key: 'unit', width: 60 },
@@ -79,7 +87,7 @@ export default function StockPage() {
       title: 'Остаток', key: 'quantity', width: 110,
       render: (_: unknown, row: StockRow) => {
         const val = edits[row.stock_id]?.quantity ?? row.quantity;
-        if (!admin) return val;
+        if (!canEdit) return val;
         return (
           <InputNumber value={val} min={0} size="small" style={{ width: 80 }}
             onChange={(v) => setEdits((e) => ({ ...e, [row.stock_id]: { ...e[row.stock_id], quantity: v ?? 0 } }))} />
@@ -98,7 +106,7 @@ export default function StockPage() {
       title: 'Доступно', key: 'available', width: 110,
       render: (_: unknown, row: StockRow) => {
         const qty = edits[row.stock_id]?.quantity ?? row.quantity;
-        const val = admin ? Math.max(0, qty - row.reserved_quantity) : row.available_quantity;
+        const val = canEdit ? Math.max(0, qty - row.reserved_quantity) : row.available_quantity;
         return <span style={{ fontWeight: 600, color: val <= 0 ? 'var(--color-danger)' : undefined }}>{val}</span>;
       },
     },
@@ -106,7 +114,7 @@ export default function StockPage() {
       title: 'Минимум', key: 'minimum_quantity', width: 110,
       render: (_: unknown, row: StockRow) => {
         const val = edits[row.stock_id]?.minimum_quantity ?? row.minimum_quantity;
-        if (!admin) return val;
+        if (!canEdit) return val;
         return (
           <InputNumber value={val} min={0} size="small" style={{ width: 80 }}
             onChange={(v) => setEdits((e) => ({ ...e, [row.stock_id]: { ...e[row.stock_id], minimum_quantity: v ?? 0 } }))} />
@@ -122,7 +130,7 @@ export default function StockPage() {
         return available <= min ? <Tag color="red">Мало</Tag> : <Tag color="green">В норме</Tag>;
       },
     },
-    ...(admin ? [{
+    ...(canEdit ? [{
       title: '', key: 'save', width: 80,
       render: (_: unknown, row: StockRow) => (
         edits[row.stock_id] ? (
@@ -135,7 +143,7 @@ export default function StockPage() {
 
   return (
     <StoreGuard>
-      <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ marginBottom: 8, display: 'flex', gap: 12, alignItems: 'center' }}>
         <Typography.Title level={4} style={{ margin: 0, flexGrow: 1 }}>Остатки на складе</Typography.Title>
         <Input
           prefix={<SearchOutlined />}
@@ -145,12 +153,20 @@ export default function StockPage() {
           allowClear
           style={{ width: 300 }}
         />
-        {admin && (
+        {canEdit && (
           <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             Редактируйте ячейки и сохраняйте кнопкой
           </Typography.Text>
         )}
       </div>
+      {stores.length > 1 && (
+        <Tabs
+          activeKey={String(viewStoreId)}
+          onChange={(key) => { setViewStoreId(Number(key)); setEdits({}); }}
+          items={stores.map((s) => ({ key: String(s.store_id), label: s.name }))}
+          style={{ marginBottom: 8 }}
+        />
+      )}
       <Table dataSource={filtered} columns={columns} rowKey="stock_id" loading={loading}
         size="middle" pagination={{ pageSize: 50 }} />
     </StoreGuard>
