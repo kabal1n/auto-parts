@@ -129,7 +129,7 @@ export default function DashboardPage() {
               value={totals ? Number(totals.total).toFixed(2) : '0.00'}
               suffix="₽"
               prefix={<RiseOutlined />}
-              valueStyle={{ color: '#3f8600' }}
+              valueStyle={{ color: 'var(--color-success)' }}
             />
           </Card>
         </Col>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
               title="Дефицит товаров"
               value={lowStock.length}
               prefix={<WarningOutlined />}
-              valueStyle={{ color: lowStock.length > 0 ? '#cf1322' : undefined }}
+              valueStyle={{ color: lowStock.length > 0 ? 'var(--color-danger)' : undefined }}
             />
           </Card>
         </Col>
@@ -169,7 +169,7 @@ export default function DashboardPage() {
           />
         </Col>
         <Col span={10}>
-          <Typography.Title level={5} style={{ color: lowStock.length > 0 ? '#cf1322' : undefined }}>
+          <Typography.Title level={5} style={{ color: lowStock.length > 0 ? 'var(--color-danger)' : undefined }}>
             Товары ниже минимума {lowStock.length > 0 && `(${lowStock.length})`}
           </Typography.Title>
           <Table
@@ -187,7 +187,7 @@ export default function DashboardPage() {
 
       {issues.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <Typography.Title level={5} style={{ color: '#d46b08' }}>
+          <Typography.Title level={5} style={{ color: 'var(--color-warning)' }}>
             <AlertOutlined style={{ marginRight: 6 }} />
             Проблемы с приёмкой ({issues.length})
           </Typography.Title>

@@ -57,9 +57,9 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f5f5f5',
+      background: 'var(--color-bg-subtle)',
     }}>
-      <Card style={{ width: 380, boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+      <Card style={{ width: 380, boxShadow: 'var(--shadow-md)' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <Typography.Title level={3} style={{ margin: 0 }}>АвтоЗапчасти</Typography.Title>
           <Typography.Text type="secondary">Информационная система</Typography.Text>

@@ -96,8 +96,8 @@ export default function ReorderPage() {
         const avail = stockMap[prod.product_id]?.available ?? null;
         const availLabel = avail === null ? null
           : avail > 0
-            ? <span style={{ color: '#8c8c8c' }}> — доступно: {avail} шт</span>
-            : <span style={{ color: '#ff4d4f' }}> — нет в наличии</span>;
+            ? <span style={{ color: 'var(--color-fg-3)' }}> — доступно: {avail} шт</span>
+            : <span style={{ color: 'var(--color-danger)' }}> — нет в наличии</span>;
         return {
           value: prod.name,
           label: <span>{prod.article ? `${prod.name} (${prod.article})` : prod.name}{availLabel}</span>,
@@ -300,7 +300,7 @@ export default function ReorderPage() {
             {selectedRequest.comment && (
               <div style={{ marginBottom: 16 }}>
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>Комментарий</Typography.Text>
-                <div style={{ marginTop: 4, padding: '8px 12px', background: '#fafafa', borderRadius: 6, border: '1px solid #f0f0f0' }}>
+                <div style={{ marginTop: 4, padding: '8px 12px', background: 'var(--color-bg-subtle)', borderRadius: 6, border: '1px solid var(--color-border-subtle)' }}>
                   <Typography.Text>{selectedRequest.comment}</Typography.Text>
                 </div>
               </div>

@@ -71,8 +71,8 @@ export default function ReportsPage() {
           <Row gutter={16} style={{ marginBottom: 24 }}>
             <Col span={4}><Card><Statistic title="Продаж" value={totals.count} /></Card></Col>
             <Col span={5}><Card><Statistic title="Сумма" value={totals.subtotal.toFixed(2)} suffix="₽" /></Card></Col>
-            <Col span={5}><Card><Statistic title="Скидки" value={totals.discount.toFixed(2)} suffix="₽" valueStyle={{ color: '#cf1322' }} /></Card></Col>
-            <Col span={5}><Card><Statistic title="Итого" value={totals.total.toFixed(2)} suffix="₽" valueStyle={{ color: '#3f8600' }} /></Card></Col>
+            <Col span={5}><Card><Statistic title="Скидки" value={totals.discount.toFixed(2)} suffix="₽" valueStyle={{ color: 'var(--color-danger)' }} /></Card></Col>
+            <Col span={5}><Card><Statistic title="Итого" value={totals.total.toFixed(2)} suffix="₽" valueStyle={{ color: 'var(--color-success)' }} /></Card></Col>
             <Col span={5}>
               <Card>
                 <Statistic title="Наличные" value={totals.cash.toFixed(2)} suffix="₽" />

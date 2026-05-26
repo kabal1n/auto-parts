@@ -83,8 +83,8 @@ export default function SalesPage() {
       res.data.map((p: Product) => {
         const available = stockMap[p.product_id]?.available ?? 0;
         const label = available > 0
-          ? <span>{p.name} — {Number(p.price).toFixed(2)} ₽ <span style={{ color: '#8c8c8c' }}>— осталось: {available} шт</span></span>
-          : <span>{p.name} — {Number(p.price).toFixed(2)} ₽ <span style={{ color: '#ff4d4f' }}>— нет в наличии</span></span>;
+          ? <span>{p.name} — {Number(p.price).toFixed(2)} ₽ <span style={{ color: 'var(--color-fg-3)' }}>— осталось: {available} шт</span></span>
+          : <span>{p.name} — {Number(p.price).toFixed(2)} ₽ <span style={{ color: 'var(--color-danger)' }}>— нет в наличии</span></span>;
         return { value: String(p.product_id), label, product: p };
       }),
     );
@@ -222,7 +222,7 @@ export default function SalesPage() {
         </Col>
 
         <Col span={9}>
-          <div style={{ background: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div style={{ background: 'var(--color-bg-surface)', borderRadius: 8, padding: 20, boxShadow: 'var(--shadow-sm)' }}>
             <Typography.Text strong>Клиент (необязательно)</Typography.Text>
             <AutoComplete
               value={customerSearch}
@@ -238,7 +238,7 @@ export default function SalesPage() {
             </Typography.Text>
 
             {customer && (
-              <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6, padding: '8px 12px', marginBottom: 12 }}>
+              <div style={{ background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)', borderRadius: 6, padding: '8px 12px', marginBottom: 12 }}>
                 <Space>
                   <Typography.Text strong>{customer.last_name} {customer.first_name}</Typography.Text>
                   <Tag color="green">Скидка {Number(customer.personal_discount_percent)}%</Tag>
@@ -300,7 +300,7 @@ export default function SalesPage() {
               </div>
               <div>
                 <Typography.Text type="secondary">Сдача</Typography.Text>
-                <div style={{ fontSize: 24, fontWeight: 600, color: cashGiven >= total - 0.01 ? '#52c41a' : '#ff4d4f' }}>
+                <div style={{ fontSize: 24, fontWeight: 600, color: cashGiven >= total - 0.01 ? 'var(--color-success)' : 'var(--color-danger)' }}>
                   {Math.max(0, cashGiven - total).toFixed(2)} ₽
                 </div>
               </div>

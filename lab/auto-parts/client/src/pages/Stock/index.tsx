@@ -89,7 +89,7 @@ export default function StockPage() {
     {
       title: 'Резерв', key: 'reserved', width: 100,
       render: (_: unknown, row: StockRow) => (
-        <span style={{ color: row.reserved_quantity === 0 ? '#bfbfbf' : undefined }}>
+        <span style={{ color: row.reserved_quantity === 0 ? 'var(--color-fg-4)' : undefined }}>
           {row.reserved_quantity}
         </span>
       ),
@@ -99,7 +99,7 @@ export default function StockPage() {
       render: (_: unknown, row: StockRow) => {
         const qty = edits[row.stock_id]?.quantity ?? row.quantity;
         const val = admin ? Math.max(0, qty - row.reserved_quantity) : row.available_quantity;
-        return <span style={{ fontWeight: 600, color: val <= 0 ? '#ff4d4f' : undefined }}>{val}</span>;
+        return <span style={{ fontWeight: 600, color: val <= 0 ? 'var(--color-danger)' : undefined }}>{val}</span>;
       },
     },
     {

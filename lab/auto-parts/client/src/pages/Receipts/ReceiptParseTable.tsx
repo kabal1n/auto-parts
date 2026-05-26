@@ -184,7 +184,7 @@ export default function ReceiptParseTable({ receiptId, initialItems, status, onS
     { title: 'Артикул (XLS)', dataIndex: 'raw_article', key: 'art', width: 100, ellipsis: true },
     { title: 'Название (XLS)', dataIndex: 'raw_name', key: 'rname', ellipsis: true, width: 250,
       render: (v: string, item: ReceiptItem) => (
-        item.product ? <Tooltip title={v}><span style={{ color: '#52c41a' }}>{item.product.name}</span></Tooltip> : v
+        item.product ? <Tooltip title={v}><span style={{ color: 'var(--color-success)' }}>{item.product.name}</span></Tooltip> : v
       ),
     },
     { title: 'Произв.', dataIndex: 'raw_manufacturer', key: 'mfr', width: 80, ellipsis: true },

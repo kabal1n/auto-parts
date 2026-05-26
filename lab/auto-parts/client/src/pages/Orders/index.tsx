@@ -315,8 +315,8 @@ export default function OrdersPage() {
           <Row gutter={20} style={{ height: 460 }}>
 
             {/* Левая колонка — товары */}
-            <Col span={14} style={{ borderRight: '1px solid #f0f0f0', paddingRight: 20, display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <Typography.Text strong style={{ fontSize: 13, color: '#595959', flexShrink: 0 }}>Товары</Typography.Text>
+            <Col span={14} style={{ borderRight: '1px solid var(--color-border-subtle)', paddingRight: 20, display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Typography.Text strong style={{ fontSize: 13, color: 'var(--color-fg-3)', flexShrink: 0 }}>Товары</Typography.Text>
               <Form.Item style={{ marginTop: 8, marginBottom: 8, flexShrink: 0 }}>
                 <AutoComplete
                   value={productSearch}
@@ -353,7 +353,7 @@ export default function OrdersPage() {
                     <div key={item.product_id}>
                       <div style={{ display: 'flex', gap: 8, marginBottom: deficit > 0 ? 2 : 8, alignItems: 'center' }}>
                         <Typography.Text style={{ flex: 1, fontSize: 13 }} ellipsis={{ tooltip: item.name }}>{item.name}</Typography.Text>
-                        <Typography.Text style={{ width: 88, fontSize: 12, color: '#8c8c8c', flexShrink: 0 }} ellipsis={{ tooltip: item.article ?? '—' }}>
+                        <Typography.Text style={{ width: 88, fontSize: 12, color: 'var(--color-fg-3)', flexShrink: 0 }} ellipsis={{ tooltip: item.article ?? '—' }}>
                           {item.article || '—'}
                         </Typography.Text>
                         <InputNumber min={1} value={item.quantity} size="small" style={{ width: 70, flexShrink: 0 }}
@@ -364,7 +364,7 @@ export default function OrdersPage() {
                         <Button size="small" danger onClick={() => setCartItems((c) => c.filter((_, j) => j !== idx))}>✕</Button>
                       </div>
                       {deficit > 0 && (
-                        <div style={{ fontSize: 12, color: '#fa8c16', marginBottom: 6, paddingLeft: 2 }}>
+                        <div style={{ fontSize: 12, color: 'var(--color-warning)', marginBottom: 6, paddingLeft: 2 }}>
                           {avail === 0
                             ? `Нет в наличии · Будет заказано у поставщика: ${item.quantity} шт`
                             : `В наличии: ${avail} шт · Будет заказано у поставщика: ${deficit} шт`}
@@ -376,22 +376,22 @@ export default function OrdersPage() {
               </div>
 
               {/* Блок итогов — всегда внизу */}
-              <div style={{ flexShrink: 0, borderTop: '1px solid #f0f0f0', paddingTop: 10, marginTop: 8, fontSize: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c8c8c', marginBottom: 3 }}>
+              <div style={{ flexShrink: 0, borderTop: '1px solid var(--color-border-subtle)', paddingTop: 10, marginTop: 8, fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-fg-3)', marginBottom: 3 }}>
                   <span>Сумма до скидки</span><span>{cartSubtotal.toFixed(2)} ₽</span>
                 </div>
                 {discountPct > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f5222d', marginBottom: 3 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-danger)', marginBottom: 3 }}>
                     <span>Скидка ({discountPct}%)</span><span>−{discountAmt.toFixed(2)} ₽</span>
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 3 }}>
                   <span>Итого</span><span>{cartTotal.toFixed(2)} ₽</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c8c8c', marginBottom: 3 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-fg-3)', marginBottom: 3 }}>
                   <span>Предоплата</span><span>{Number(prepayment).toFixed(2)} ₽</span>
                 </div>
-                <div style={{ borderTop: '1px solid #e8e8e8', marginTop: 6, paddingTop: 6, display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: '#1677ff', fontSize: 14 }}>
+                <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 6, paddingTop: 6, display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: 'var(--color-primary)', fontSize: 14 }}>
                   <span>К оплате</span><span>{amountDuePreview.toFixed(2)} ₽</span>
                 </div>
               </div>
@@ -399,7 +399,7 @@ export default function OrdersPage() {
 
             {/* Правая колонка — клиент + условия */}
             <Col span={10} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Typography.Text strong style={{ fontSize: 13, color: '#595959', flexShrink: 0 }}>Клиент</Typography.Text>
+              <Typography.Text strong style={{ fontSize: 13, color: 'var(--color-fg-3)', flexShrink: 0 }}>Клиент</Typography.Text>
               <Form.Item name="client_id" style={{ marginTop: 8, marginBottom: 8, flexShrink: 0 }}>
                 <AutoComplete
                   options={customerOptions}
@@ -423,7 +423,7 @@ export default function OrdersPage() {
               )}
 
               <Divider style={{ margin: '12px 0 8px', flexShrink: 0 }} />
-              <Typography.Text strong style={{ fontSize: 13, color: '#595959', flexShrink: 0 }}>Условия заказа</Typography.Text>
+              <Typography.Text strong style={{ fontSize: 13, color: 'var(--color-fg-3)', flexShrink: 0 }}>Условия заказа</Typography.Text>
 
               <Row gutter={10} style={{ marginTop: 8, flexShrink: 0 }}>
                 <Col span={12}>
@@ -443,7 +443,7 @@ export default function OrdersPage() {
 
               {/* Заметки растягиваются на оставшееся место */}
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                <Typography.Text style={{ fontSize: 14, color: 'rgba(0,0,0,0.88)', display: 'block', marginBottom: 8 }}>Заметки</Typography.Text>
+                <Typography.Text style={{ fontSize: 14, color: 'var(--color-fg-1)', display: 'block', marginBottom: 8 }}>Заметки</Typography.Text>
                 <Input.TextArea
                   value={notesValue}
                   onChange={(e) => setNotesValue(e.target.value)}
@@ -480,11 +480,11 @@ export default function OrdersPage() {
                 <Typography.Text strong style={{ fontSize: 15 }}>
                   {detailOrder.customer.last_name} {detailOrder.customer.first_name}
                 </Typography.Text>
-                <Typography.Text style={{ marginLeft: 12, color: '#595959' }}>
+                <Typography.Text style={{ marginLeft: 12, color: 'var(--color-fg-3)' }}>
                   {formatPhone(detailOrder.customer.phone)}
                 </Typography.Text>
               </div>
-              <div style={{ marginTop: 2, color: '#8c8c8c', fontSize: 13 }}>
+              <div style={{ marginTop: 2, color: 'var(--color-fg-3)', fontSize: 13 }}>
                 {detailOrder.car ? `${detailOrder.car.car_brand} ${detailOrder.car.car_model}` : 'Автомобиль не указан'}
                 <span style={{ margin: '0 8px' }}>·</span>
                 Создан {dayjs(detailOrder.created_at).format('DD.MM.YYYY HH:mm')}
@@ -522,7 +522,7 @@ export default function OrdersPage() {
                   <Button size="small" icon={<EditOutlined />} type="text" onClick={() => openEdit('notes')} />
                 )}
               </div>
-              <div style={{ marginTop: 4, color: detailOrder.notes ? '#262626' : '#bfbfbf', whiteSpace: 'pre-wrap', fontSize: 13 }}>
+              <div style={{ marginTop: 4, color: detailOrder.notes ? 'var(--color-fg-1)' : 'var(--color-fg-4)', whiteSpace: 'pre-wrap', fontSize: 13 }}>
                 {detailOrder.notes || 'Нет заметок'}
               </div>
             </div>
@@ -530,13 +530,13 @@ export default function OrdersPage() {
             <Divider style={{ margin: '10px 0' }} />
 
             {/* Расчёт */}
-            <div style={{ background: '#f5f5f5', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
+            <div style={{ background: 'var(--color-bg-app)', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
               <Typography.Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 10 }}>Расчёт</Typography.Text>
               {Number(detailOrder.discount_percent) > 0 && <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, color: '#595959' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, color: 'var(--color-fg-3)' }}>
                   <span>Сумма до скидки</span><span>{fmt(detailOrder.subtotal_amount)}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, color: '#ff4d4f' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, color: 'var(--color-danger)' }}>
                   <span>Скидка ({Number(detailOrder.discount_percent)}%)</span>
                   <span>−{fmt(detailOrder.discount_amount)}</span>
                 </div>
@@ -544,10 +544,10 @@ export default function OrdersPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontWeight: 500 }}>
                 <span>Итого</span><span>{fmt(detailOrder.total_amount)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c8c8c' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-fg-3)' }}>
                 <span>Предоплата</span><span>{fmt(detailOrder.prepayment_amount)}</span>
               </div>
-              <div style={{ borderTop: '2px solid #d9d9d9', marginTop: 10, paddingTop: 10, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16, color: '#1677ff' }}>
+              <div style={{ borderTop: '2px solid var(--color-border-strong)', marginTop: 10, paddingTop: 10, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16, color: 'var(--color-primary)' }}>
                 <span>К оплате</span><span>{fmt(detailOrder.amount_due)}</span>
               </div>
             </div>
@@ -642,7 +642,7 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <Typography.Text type="secondary">Сдача</Typography.Text>
-                  <div style={{ fontSize: 24, fontWeight: 600, color: cashGiven >= checkoutAmountDue - 0.01 ? '#52c41a' : '#ff4d4f' }}>
+                  <div style={{ fontSize: 24, fontWeight: 600, color: cashGiven >= checkoutAmountDue - 0.01 ? 'var(--color-success)' : 'var(--color-danger)' }}>
                     {Math.max(0, cashGiven - checkoutAmountDue).toFixed(2)} ₽
                   </div>
                 </div>
@@ -650,7 +650,7 @@ export default function OrdersPage() {
             )}
 
             {payType === 'card' && (
-              <div style={{ padding: '12px 0', color: '#595959' }}>
+              <div style={{ padding: '12px 0', color: 'var(--color-fg-3)' }}>
                 Будет проведена оплата картой на сумму <strong>{Number(detailOrder.amount_due).toFixed(2)} ₽</strong>
               </div>
             )}
