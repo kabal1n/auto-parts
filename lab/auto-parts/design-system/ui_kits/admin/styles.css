@@ -140,9 +140,9 @@ body {
 .tag-success { background: var(--color-success-bg); color: #15803D; border-color: var(--color-success-border); }
 .tag-danger  { background: var(--color-danger-bg);  color: #B91C1C; border-color: var(--color-danger-border); }
 .tag-warning { background: var(--color-warning-bg); color: #B45309; border-color: var(--color-warning-border); }
-.tag-info    { background: var(--color-info-bg);    color: #1B4BAD; border-color: var(--color-info-border); }
-.tag-admin   { background: var(--color-role-admin-bg);   color: #1B4BAD; border-color: var(--color-info-border); }
-.tag-cashier { background: var(--color-role-cashier-bg); color: #0E7C57; border-color: #A7E3CB; }
+.tag-info    { background: var(--color-info-bg);    color: #0F5535; border-color: var(--color-info-border); }
+.tag-admin   { background: var(--color-role-admin-bg);   color: #0F5535; border-color: var(--color-info-border); }
+.tag-cashier { background: var(--color-role-cashier-bg); color: #334155; border-color: #CBD5E1; }
 
 /* Button ======================================================== */
 .btn {

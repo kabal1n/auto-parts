@@ -63,6 +63,7 @@ export default function ReceiptsPage() {
   const [loading, setLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // Manual receipt modal
   const [createOpen, setCreateOpen] = useState(false);
@@ -89,12 +90,13 @@ export default function ReceiptsPage() {
     try {
       const params: Record<string, string> = {};
       if (activeStoreId) params.store_id = String(activeStoreId);
+      if (statusFilter) params.status = statusFilter;
       const res = await receiptsApi.list(params);
       setReceipts(res.data as Receipt[]);
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, [activeStoreId]);
+  useEffect(() => { load(); }, [activeStoreId, statusFilter]);
   useEffect(() => {
     suppliersApi.list().then((r) => setSuppliers(r.data));
     if (admin) storesApi.list().then((r) => setStores(r.data));
@@ -263,6 +265,14 @@ export default function ReceiptsPage() {
     <StoreGuard>
       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <Typography.Title level={4} style={{ margin: 0, flexGrow: 1 }}>Поступления товаров</Typography.Title>
+        <Select
+          placeholder="Все статусы"
+          allowClear
+          style={{ width: 160 }}
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v ?? null)}
+          options={Object.entries(STATUS_LABELS).map(([key, { label }]) => ({ value: key, label }))}
+        />
         <Button icon={<UploadOutlined />} onClick={openUpload}>Загрузить накладную</Button>
         {admin && (
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>

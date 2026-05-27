@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Button, Typography, Tag, Select, Tooltip } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   HomeOutlined,
   ShoppingCartOutlined,
@@ -23,19 +24,56 @@ import { storesApi } from '../api';
 
 const { Sider, Header, Content } = Layout;
 
-const allItems = [
-  { key: '/',          label: 'Главная',            icon: <HomeOutlined />,        adminOnly: true  },
-  { key: '/sales',     label: 'Касса / Продажа',   icon: <ShoppingCartOutlined />, adminOnly: false },
-  { key: '/products',  label: 'Товары',             icon: <AppstoreOutlined />,    adminOnly: false },
-  { key: '/stock',     label: 'Остатки',            icon: <DatabaseOutlined />,    adminOnly: false },
-  { key: '/customers', label: 'Клиенты',            icon: <TeamOutlined />,        adminOnly: false },
-  { key: '/orders',    label: 'Заказы клиентов',    icon: <FileTextOutlined />,    adminOnly: false },
-  { key: '/receipts',  label: 'Поступления',        icon: <InboxOutlined />,       adminOnly: false },
-  { key: '/reorder',   label: 'Заявки на закупку',  icon: <UnorderedListOutlined />, adminOnly: false },
-  { key: '/reports',   label: 'Отчёты',             icon: <BarChartOutlined />,    adminOnly: true  },
-  { key: '/users',     label: 'Сотрудники',         icon: <UserOutlined />,        adminOnly: true  },
-  { key: '/audit',     label: 'Журнал действий',    icon: <AuditOutlined />,       adminOnly: true  },
-  { key: '/suppliers', label: 'Поставщики',          icon: <TruckOutlined />,       adminOnly: true  },
+type MenuItem = Required<MenuProps>['items'][number];
+
+const adminItems: MenuItem[] = [
+  { key: '/', label: 'Главная', icon: <HomeOutlined /> },
+  {
+    type: 'group', label: 'Продажи',
+    children: [
+      { key: '/sales',     label: 'Касса / Продажа', icon: <ShoppingCartOutlined /> },
+      { key: '/customers', label: 'Клиенты',          icon: <TeamOutlined /> },
+      { key: '/orders',    label: 'Заказы клиентов',  icon: <FileTextOutlined /> },
+    ],
+  },
+  {
+    type: 'group', label: 'Склад',
+    children: [
+      { key: '/products', label: 'Товары',            icon: <AppstoreOutlined /> },
+      { key: '/stock',    label: 'Остатки',           icon: <DatabaseOutlined /> },
+      { key: '/receipts', label: 'Поступления',       icon: <InboxOutlined /> },
+      { key: '/reorder',  label: 'Заявки на закупку', icon: <UnorderedListOutlined /> },
+    ],
+  },
+  {
+    type: 'group', label: 'Управление',
+    children: [
+      { key: '/reports',   label: 'Отчёты',         icon: <BarChartOutlined /> },
+      { key: '/suppliers', label: 'Поставщики',      icon: <TruckOutlined /> },
+      { key: '/users',     label: 'Сотрудники',      icon: <UserOutlined /> },
+      { key: '/audit',     label: 'Журнал действий', icon: <AuditOutlined /> },
+    ],
+  },
+];
+
+const cashierItems: MenuItem[] = [
+  {
+    type: 'group', label: 'Продажи',
+    children: [
+      { key: '/sales',     label: 'Касса / Продажа', icon: <ShoppingCartOutlined /> },
+      { key: '/customers', label: 'Клиенты',          icon: <TeamOutlined /> },
+      { key: '/orders',    label: 'Заказы клиентов',  icon: <FileTextOutlined /> },
+    ],
+  },
+  {
+    type: 'group', label: 'Склад',
+    children: [
+      { key: '/products', label: 'Товары',            icon: <AppstoreOutlined /> },
+      { key: '/stock',    label: 'Остатки',           icon: <DatabaseOutlined /> },
+      { key: '/receipts', label: 'Поступления',       icon: <InboxOutlined /> },
+      { key: '/reorder',  label: 'Заявки на закупку', icon: <UnorderedListOutlined /> },
+    ],
+  },
 ];
 
 interface Store { store_id: number; name: string }
@@ -57,22 +95,20 @@ export default function AppLayout() {
     });
   }, []);
 
-  const items = allItems
-    .filter((i) => !i.adminOnly || isAdmin())
-    .map((i) => ({ key: i.key, label: i.label, icon: i.icon }));
+  const items = isAdmin() ? adminItems : cashierItems;
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider width={220} theme="light" style={{ borderRight: '1px solid #f0f0f0' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
-          <Typography.Text strong style={{ fontSize: 16 }}>АвтоЗапчасти</Typography.Text>
+    <Layout style={{ height: '100vh' }}>
+      <Sider width={220} theme="light" style={{ borderRight: '1px solid #f0f0f0', overflow: 'auto' }}>
+        <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #f0f0f0' }}>
+          <Typography.Text strong style={{ fontSize: 15 }}>АвтоЗапчасти</Typography.Text>
         </div>
         <Menu
           mode="inline"
           selectedKeys={[location.pathname]}
           items={items}
           onClick={({ key }) => navigate(key)}
-          style={{ borderRight: 0, fontSize: 14 }}
+          style={{ borderRight: 0, fontSize: 13, marginTop: 4 }}
         />
       </Sider>
 
@@ -127,7 +163,7 @@ export default function AppLayout() {
           </div>
         </Header>
 
-        <Content style={{ padding: 24, background: '#f5f5f5', overflow: 'auto' }}>
+        <Content style={{ padding: 24, background: '#f5f5f5', overflow: 'auto', minHeight: 0 }}>
           <Outlet />
         </Content>
       </Layout>

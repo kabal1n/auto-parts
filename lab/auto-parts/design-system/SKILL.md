@@ -1,6 +1,6 @@
 ---
 name: autoparts-design
-description: Use this skill to generate well-branded interfaces and assets for АвтоЗапчасти (AutoParts) — an internal ERP/CRM/POS console for a chain of auto-parts retail stores. Use this skill for production interfaces, prototypes, mocks, slides, or any other design artifact that should match the AutoParts brand. Contains essential design guidelines (calm corporate ERP aesthetic, Russian-language UI, IBM Plex Sans + JetBrains Mono, slate neutrals + #2D6CDF primary), color/type/spacing tokens, logo assets, iconography mapping, and a full Ant-Design-based UI kit with click-through admin/POS screens.
+description: Use this skill to generate well-branded interfaces and assets for АвтоЗапчасти (AutoParts) — an internal ERP/CRM/POS console for a chain of auto-parts retail stores. Use this skill for production interfaces, prototypes, mocks, slides, or any other design artifact that should match the AutoParts brand. Contains essential design guidelines (calm corporate ERP aesthetic, Russian-language UI, IBM Plex Sans + JetBrains Mono, slate neutrals + #1F8A5B primary), color/type/spacing tokens, logo assets, iconography mapping, and a full Ant-Design-based UI kit with click-through admin/POS screens.
 user-invocable: true
 ---
 
@@ -14,7 +14,7 @@ If creating **visual artifacts** (slides, mocks, throwaway prototypes, design pr
 
 If working on **production code** for the existing client (React 19 + Ant Design 6 + Vite + TypeScript, see `lab/auto-parts/client/`):
 - Use the tokens in `colors_and_type.css` as the source of truth
-- Bind Ant Design's `ConfigProvider` to the matching token values (primary `#2D6CDF`, radius `8`, layout bg `#F4F6FA`, font family `IBM Plex Sans`)
+- Bind Ant Design's `ConfigProvider` to the matching token values (primary `#1F8A5B`, radius `8`, layout bg `#F4F6FA`, font family `IBM Plex Sans`)
 - Keep using `@ant-design/icons` — Lucide is a mock-time substitution only
 - Match the existing patterns in `lab/auto-parts/client/src/pages/` — table density, status tags, modal structure, page header layout
 

@@ -108,20 +108,20 @@ The console is organised as a left-rail navigation with **13 pages**:
 
 ## Visual foundations
 
-> **TL;DR:** White surfaces on a soft slate background. Calm corporate blue (#2D6CDF) for primary actions and selection. Slate-based neutral scale. Subtle one-axis shadows. 8px radius default. No gradients, no textures, no illustrations. IBM Plex Sans + JetBrains Mono. Motion is fast and out-eased — never bouncy.
+> **TL;DR:** White surfaces on a soft slate background. Premium emerald (#1F8A5B) for primary actions and selection. Slate-based neutral scale. Subtle one-axis shadows. 8px radius default. No gradients, no textures, no illustrations. IBM Plex Sans + JetBrains Mono. Motion is fast and out-eased — never bouncy.
 
 ### Color
 
 - **Surfaces.** App background `#F4F6FA` (a desaturated slate, calmer than Ant Design's `#f5f5f5`). All cards, modals, the sidebar and the topbar sit on **pure white** (`#FFFFFF`). This is the cornerstone of the "premium" feel — high-contrast white panels, soft non-white ground.
 - **Borders.** Hairlines at `#E1E6EF` everywhere structural; `#EEF1F6` for inside-card dividers. Never use a heavy border — depth comes from shadow + tone, not stroke weight.
-- **Primary.** `#2D6CDF` — a calm corporate blue. Hover `#245CC6`, press `#1B4BAD`. Subtle background `#EAF1FE` for selected nav, primary-tinted tags, info banners.
+- **Primary.** `#1F8A5B` — a premium emerald green. Calm, sophisticated, technical — not lime, not minty. Hover `#176E48`, press `#0F5535`. Subtle background `#ECF7F1` for selected nav, primary-tinted tags, info banners.
 - **Text.** 4-step grayscale: `#0F172A` (fg-1, headings + numerals), `#334155` (fg-2, body), `#64748B` (fg-3, labels), `#94A3B8` (fg-4, hint/placeholder).
 - **Semantic.** Each status has a 3-token group: fg / bg / border.
   - **Success** `#16A34A` / `#ECFDF5` / `#BBF7D0` — "В норме", "Проведено", customer-attached discount.
   - **Danger** `#DC2626` / `#FEF2F2` / `#FECACA` — "Мало", deletion, low-stock alarms.
   - **Warning** `#D97706` / `#FFFBEB` / `#FED7AA` — "Проблемы с приёмкой", validation hints.
-  - **Info** = primary blue.
-- **Role accents.** Administrator = blue tag; Cashier = green tag. Surfaces every signed-in screen.
+  - **Info** = primary emerald.
+- **Role accents.** Administrator = emerald tag (brand color); Cashier = neutral slate tag. They're visually distinct so you can tell at a glance which role is signed in, without the cashier tag clashing with the brand green.
 - **No gradients.** Anywhere. Backgrounds are flat fills. Statistics use colored numerals on white, not gradient cards.
 - **Imagery vibe.** None by default. The product carries no decorative imagery — no hero photos, no illustrations, no patterns. If imagery ever appears (e.g. a car photo on a customer record), it should be clean studio-style, cool-neutral, never warm or grainy.
 
@@ -158,7 +158,7 @@ A 3-step shadow scale, all single-axis (no spread), all warm-neutral against sla
 - `--shadow-sm` `0 2px 8px rgba(15,23,42,0.06)` — **default card resting**.
 - `--shadow-md` `0 4px 16px rgba(15,23,42,0.08)` — card hover, dropdown.
 - `--shadow-lg` `0 12px 32px rgba(15,23,42,0.10)` — modal.
-- `--shadow-focus` `0 0 0 3px rgba(45,108,223,0.18)` — keyboard focus ring (primary, semi-transparent).
+- `--shadow-focus` `0 0 0 3px rgba(31, 138, 91,0.18)` — keyboard focus ring (primary, semi-transparent).
 
 No inner shadows on cards. No "glow" colors. No multi-layer shadows.
 
@@ -168,7 +168,7 @@ Cards have **both** a hairline border (`--color-border`) **and** a soft `--shado
 
 ### Hover / press / focus
 
-- **Buttons.** Hover = primary `#245CC6` (one step darker), no scale, no shadow change. Press = `#1B4BAD`, no shrink. Disabled = 50% opacity, no pointer cursor.
+- **Buttons.** Hover = primary `#176E48` (one step darker), no scale, no shadow change. Press = `#0F5535`, no shrink. Disabled = 50% opacity, no pointer cursor.
 - **Rows.** Hover = `--color-bg-subtle`, full row.
 - **Cards.** Hover = shadow steps from `sm` → `md` (`transition: box-shadow 180ms var(--ease-out)`). No translate.
 - **Focus.** Always a 3-px primary ring (`--shadow-focus`), never replacing the border, always combining with it.
@@ -234,12 +234,12 @@ Used sparingly and only on overlays: modal scrim `rgba(15,23,42,0.45)` with no b
 2. **Icon substitution.** Production uses **`@ant-design/icons`**. Design-system previews use **Lucide** via CDN as the closest visual match. Mock-only — real designs and production code should use the original icon package.
 3. **Logo is new.** No brand mark existed in the codebase (the `public/favicon.svg` and `public/icons.svg` files turned out to be unmodified Vite template assets — not the actual product brand). We designed a calm geometric gear-mark + Cyrillic wordmark in the primary blue. Treat as a v1 placeholder; iterate as needed.
 4. **No marketing surface.** The product has no landing page, marketing site, or external website — there's only the internal admin/POS console. So this design system contains **one** UI kit (`ui_kits/admin/`).
-5. **Color refinement.** Ant Design's default `#1677ff` blue was replaced with a slightly more muted `#2D6CDF` and a slate-based neutral scale. To revert to AntD defaults, override the `--color-primary` family + neutrals in `colors_and_type.css`.
+5. **Color refinement.** Ant Design's default `#1677ff` blue was replaced with a premium emerald scale (`#1F8A5B`) and slate-based neutrals. To revert, override the `--color-primary` family + neutrals in `colors_and_type.css`.y` family + neutrals in `colors_and_type.css`.
 
 ---
 
 ## Using this system
 
-- For **production code**: copy `colors_and_type.css` into the client, swap `font-family` + Ant Design `ConfigProvider` theme tokens to match (`token.colorPrimary = '#2D6CDF'`, `token.borderRadius = 8`, `token.colorBgLayout = '#F4F6FA'`, etc).
+- For **production code**: copy `colors_and_type.css` into the client, swap `font-family` + Ant Design `ConfigProvider` theme tokens to match (`token.colorPrimary = '#1F8A5B'`, `token.borderRadius = 8`, `token.colorBgLayout = '#F4F6FA'`, etc).
 - For **mockups + prototypes**: include `colors_and_type.css`, use the components in `ui_kits/admin/`, link Lucide icons from CDN, write copy following the rules in *Content fundamentals*.
-- For **slides + docs**: use the logo from `assets/`, the primary blue and slate neutrals, IBM Plex Sans, sentence case, no emoji.
+- For **slides + docs**: use the logo from `assets/`, the primary emerald and slate neutrals, IBM Plex Sans, sentence case, no emoji.

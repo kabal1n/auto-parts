@@ -30,13 +30,13 @@
   --color-fg-inverse:    #FFFFFF;
 
   /* ============================================================
-     COLOR — Brand (calm corporate blue)
+     COLOR — Brand (premium emerald)
      ============================================================ */
-  --color-primary:       #2D6CDF;   /* primary actions, focus rings, active nav */
-  --color-primary-hover: #245CC6;
-  --color-primary-press: #1B4BAD;
-  --color-primary-bg:    #EAF1FE;   /* selected-row tint, primary subtle */
-  --color-primary-border:#BCD3FA;
+  --color-primary:       #1F8A5B;   /* primary actions, focus rings, active nav */
+  --color-primary-hover: #176E48;
+  --color-primary-press: #0F5535;
+  --color-primary-bg:    #ECF7F1;   /* selected-row tint, primary subtle */
+  --color-primary-border:#B7DDC7;
 
   /* ============================================================
      COLOR — Semantic (status, feedback, business meaning)
@@ -53,20 +53,22 @@
   --color-warning-bg:     #FFFBEB;
   --color-warning-border: #FED7AA;
 
-  --color-info:           #2D6CDF;
-  --color-info-bg:        #EAF1FE;
-  --color-info-border:    #BCD3FA;
+  --color-info:           #1F8A5B;
+  --color-info-bg:        #ECF7F1;
+  --color-info-border:    #B7DDC7;
 
   --color-neutral-bg:     #F1F5F9;  /* default tag */
   --color-neutral-border: #E1E6EF;
 
   /* ============================================================
      COLOR — Role accents (Администратор / Кассир)
+     — Admin uses the brand emerald; Cashier uses neutral slate so the
+        two tags read as distinct roles without clashing colors.
      ============================================================ */
-  --color-role-admin:     #2D6CDF;
-  --color-role-admin-bg:  #EAF1FE;
-  --color-role-cashier:   #0E9F6E;
-  --color-role-cashier-bg:#E6F7EF;
+  --color-role-admin:     #1F8A5B;
+  --color-role-admin-bg:  #ECF7F1;
+  --color-role-cashier:   #475569;
+  --color-role-cashier-bg:#F1F5F9;
 
   /* ============================================================
      TYPOGRAPHY — Stacks
@@ -134,7 +136,7 @@
   --shadow-sm:    0 2px 8px rgba(15, 23, 42, 0.06);            /* card resting */
   --shadow-md:    0 4px 16px rgba(15, 23, 42, 0.08);           /* card hover, dropdown */
   --shadow-lg:    0 12px 32px rgba(15, 23, 42, 0.10);          /* modal */
-  --shadow-focus: 0 0 0 3px rgba(45, 108, 223, 0.18);          /* focus ring */
+  --shadow-focus: 0 0 0 3px rgba(31, 138, 91, 0.18);          /* focus ring */
 
   /* Inset (for inputs / pressed) */
   --shadow-inset: inset 0 1px 0 rgba(15, 23, 42, 0.04);

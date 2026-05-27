@@ -37,9 +37,9 @@ const IconBarcode  = (p) => <Ic {...p}><path d="M3 5v14M6 5v14M9 5v14M12 5v14M15
 // Brand mark (not a Lucide icon — local SVG)
 const BrandMark = ({ size = 22 }) => (
   <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="13" stroke="#2D6CDF" strokeWidth="2"/>
-    <circle cx="16" cy="16" r="4.5" fill="#2D6CDF"/>
-    <path d="M16 3.5v3M16 25.5v3M3.5 16h3M25.5 16h3M7.3 7.3l2.1 2.1M22.6 22.6l2.1 2.1M7.3 24.7l2.1-2.1M22.6 9.4l2.1-2.1" stroke="#2D6CDF" strokeWidth="2" strokeLinecap="round"/>
+    <circle cx="16" cy="16" r="13" stroke="#1F8A5B" strokeWidth="2"/>
+    <circle cx="16" cy="16" r="4.5" fill="#1F8A5B"/>
+    <path d="M16 3.5v3M16 25.5v3M3.5 16h3M25.5 16h3M7.3 7.3l2.1 2.1M22.6 22.6l2.1 2.1M7.3 24.7l2.1-2.1M22.6 9.4l2.1-2.1" stroke="#1F8A5B" strokeWidth="2" strokeLinecap="round"/>
   </svg>
 );
 

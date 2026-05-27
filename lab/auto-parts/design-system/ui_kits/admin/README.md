@@ -20,7 +20,7 @@ The console UI kit — a faithful, simplified recreation of the AutoParts admin/
 
 - Sentence case Russian copy throughout.
 - IBM Plex Sans + JetBrains Mono.
-- Primary `#2D6CDF`, slate neutrals, white surfaces on `#F4F6FA`.
+- Primary `#1F8A5B`, slate neutrals, white surfaces on `#F4F6FA`.
 - 8 px card radius, 6 px button/input radius.
 - Single-axis shadows; hover steps the shadow, never translates.
 - Tabular numerals on every number that appears in a table or statistic.
@@ -32,4 +32,4 @@ Open `index.html` — it's a **self-contained bundle**: all CSS and JS are inlin
 
 The split source files (`Icon.js`, `primitives.js`, etc.) are kept alongside as **readable reference** — if you change one of them, regenerate `index.html` by re-running the bundle (concat all `.js` files in load order between `<script type="text/babel" data-presets="react">…</script>` tags, and inline `../../colors_and_type.css` + `styles.css` into a `<style>` block).
 
-For production work, port the JSX in those source files to TypeScript and bind them to Ant Design's `ConfigProvider` (theme tokens: `colorPrimary: '#2D6CDF'`, `borderRadius: 8`, `colorBgLayout: '#F4F6FA'`, `fontFamily: "'IBM Plex Sans', ..."`).
+For production work, port the JSX in those source files to TypeScript and bind them to Ant Design's `ConfigProvider` (theme tokens: `colorPrimary: '#1F8A5B'`, `borderRadius: 8`, `colorBgLayout: '#F4F6FA'`, `fontFamily: "'IBM Plex Sans', ..."`).
