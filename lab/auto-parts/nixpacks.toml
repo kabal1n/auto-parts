@@ -1,11 +1,11 @@
 providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs_24"]
+nixPkgs = ["nodejs_22"]
 
 [phases.install]
 cmds = [
-  "cd client && npm ci && npm install rolldown",
+  "cd client && npm ci",
   "cd server && npm ci"
 ]
 
