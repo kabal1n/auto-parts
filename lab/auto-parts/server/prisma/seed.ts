@@ -17,19 +17,21 @@ async function main() {
     create: { name: 'Кассир' },
   });
 
-  // Default admin user
-  const hash = await bcrypt.hash('admin123', 10);
-  await prisma.user.upsert({
-    where: { login: 'admin' },
-    update: {},
-    create: {
-      login: 'admin',
-      password_hash: hash,
-      role_id: adminRole.role_id,
-      last_name: 'Администратор',
-      first_name: 'Системный',
-    },
-  });
+  // Default admin user — only on first run (empty database)
+  const userCount = await prisma.user.count();
+  if (userCount === 0) {
+    const hash = await bcrypt.hash('admin123', 10);
+    await prisma.user.create({
+      data: {
+        login: 'admin',
+        password_hash: hash,
+        role_id: adminRole.role_id,
+        last_name: 'Администратор',
+        first_name: 'Системный',
+      },
+    });
+    console.log('Default admin user created');
+  }
 
   // Default store
   await prisma.store.upsert({

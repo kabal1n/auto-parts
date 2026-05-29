@@ -16,4 +16,4 @@ cmds = [
 ]
 
 [start]
-cmd = "cd server && npx prisma migrate deploy && npm start"
+cmd = "cd server && npx prisma migrate deploy && npm run db:seed && npm start"
